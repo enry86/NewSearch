@@ -155,7 +155,6 @@ def read_sock (pool, f_man, m):
         if t == 0:
             f_man.add_feed(data)
         elif t == 1:
-            print 'storing page'
             store_page(data, m)
 
 
