@@ -24,10 +24,10 @@ class AsynSocket (asyncore.dispatcher):
             target = (self.phost, self.pport)
         else:
             target = (host, 80)
-        url = 'http://%s%s' % (host, path)
+        self.url = 'http://%s%s' % (host, path)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(target)
-        self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % url
+        self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % self.url
 
 
     def handle_connect (self):
@@ -89,7 +89,7 @@ class SockPool:
     def read_socket(self):
         self.r_sem.acquire()
         s = self.ready.pop()
-        res = s.data
+        res = (s.data, s.url)
         s.data = ''
         self.free.append(s)
         self.f_sem.release()

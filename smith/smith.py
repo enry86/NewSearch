@@ -143,7 +143,8 @@ def read_urls(f_man, pool, m):
         f_man.u_sem.acquire()
         urls = f_man.items.keys()
         u = urls.pop()
-        f_man.items.pop(u)
+        v = f_man.items.pop(u)
+        f_man.items_proc[u] = v
         tar = get_host_path(u)
         if tar != None:
             pool.start_socket(tar, 1)
@@ -153,18 +154,50 @@ def read_sock (pool, f_man, m):
     while not m.quit:
         data, t =  pool.read_socket()
         if t == 0:
-            f_man.add_feed(data)
+            f_man.add_feed(data[0])
         elif t == 1:
-            store_page(data, m)
+            store_page(data, f_man, m)
 
 
-def store_page(data, man):
-    path = man.conf['pag_dir'] + '/'
-    f_name = str(time.time()).replace('.', '')
-    f = open(path + f_name + '.html', 'w')
-    f.write(data)
-    f.close()
+def build_header (str_h):
+    head = {}
+    fields = str_h.split('\n')
+    head['status'] = fields[0]
+    fields.remove(fields[0])
+    for f in fields:
+        try:
+            k, v = f.split(': ')
+            head[k] = v
+        except ValueError:
+            pass
+    return head
 
+
+def get_content (data):
+    str_h = data[:data.find('<')]
+    cont = data[data.find('<'):]
+    head = build_header(str_h)
+    return head, cont
+
+
+def store_page (data, f_man, man):
+    head, cont = get_content(data[0])
+    st_ok = head['status'].find('200') != -1
+    st_mv = head['status'].find('301') != -1
+    st_fnd = head['status'].find('302') != -1
+    if st_ok:
+        path = man.conf['pag_dir'] + '/'
+        f_name = str(time.time()).replace('.', '')
+        f = open(path + f_name + '.html', 'w')
+        f.write(cont)
+        f.close()
+    elif st_mv or st_fnd:
+        url = head['Location']
+        v = f_man.items_proc[data[1]]
+        f_man.items[url] = (v, 'redirected')
+        f_man.u_sem.release()
+    f_man.items_proc.pop(data[1])
+        
 
 def main ():
     conf = read_options()

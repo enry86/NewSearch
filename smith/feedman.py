@@ -6,6 +6,7 @@ import threading
 class FeedManager:
     def __init__ (self):
         self.items = {}
+        self.items_proc = {}
         self.u_sem = threading.Semaphore(0)
 
     def add_feed(self, xml):
