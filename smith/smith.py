@@ -24,8 +24,12 @@ import feedman
 
 
 class Manager:
-    def __init__(self, conf):
+    
+    def __init__(self, conf, pool, f_man):
+        self.pg_saved = 0
         self.conf = conf
+        self.pool = pool
+        self.f_man = f_man
         self.quit = False
         self.init_dirs()
 
@@ -39,6 +43,11 @@ class Manager:
     def quit_com(self):
         self.quit = True
 
+    
+    def status(self):
+        print 'Articles retrieved:', self.f_man.articles
+        print 'Pages saved:', self.pg_saved
+        print 'Working sockets:', self.pool.working
 
     def console(self):
         s = ''
@@ -46,6 +55,8 @@ class Manager:
             s = raw_input('> ')
             if s == 'q':
                 self.quit_com()
+            elif s == 's':
+                self.status()
             
     
     def start_cons(self):
@@ -162,12 +173,12 @@ def read_sock (pool, f_man, m):
 def build_header (str_h):
     head = {}
     fields = str_h.split('\n')
-    head['status'] = fields[0]
+    head['status'] = fields[0].strip()
     fields.remove(fields[0])
     for f in fields:
         try:
             k, v = f.split(': ')
-            head[k] = v
+            head[k.strip()] = v.strip()
         except ValueError:
             pass
     return head
@@ -191,21 +202,32 @@ def store_page (data, f_man, man):
         f = open(path + f_name + '.html', 'w')
         f.write(cont)
         f.close()
+        man.pg_saved += 1
     elif st_mv or st_fnd:
         url = head['Location']
         v = f_man.items_proc[data[1]]
         f_man.items[url] = (v, 'redirected')
         f_man.u_sem.release()
+    elif head['status'] == '':
+        v = f_man.items_proc[data[1]]
+        f_man.items[data[1]] = (v, 'retry')
+        f_man.u_sem.release()
     f_man.items_proc.pop(data[1])
         
+
+def start_poll(man, pool):
+    while not man.quit:
+        time.sleep(10)
+        pool.poll()
+
 
 def main ():
     conf = read_options()
     feeds = get_feeds(conf['feeds'])
-    man = Manager(conf)
-    man.start_cons()
     f_man = feedman.FeedManager()
     pool = sock_pool.SockPool(conf)
+    man = Manager(conf, pool, f_man)
+    man.start_cons()
     s_thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
     s_thr.setDaemon(True)
     s_thr.start()
@@ -217,6 +239,11 @@ def main ():
     u_thr = threading.Thread(target = read_urls, args = u_args)
     u_thr.setDaemon(True)
     u_thr.start()
+    p_args = (man, pool)
+    p_thr = threading.Thread(target = start_poll, args = p_args)
+    p_thr.setDaemon(True)
+    p_thr.start()
+
 
 if __name__ == '__main__':
     main()
