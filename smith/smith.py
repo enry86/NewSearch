@@ -136,7 +136,6 @@ def get_host_path (url):
 def read_feeds (feeds, pool):
     for f in feeds:
         pool.start_socket(f, 0)
-    pool.start_loop()
 
 
 def read_urls(f_man, pool, m):
@@ -144,6 +143,7 @@ def read_urls(f_man, pool, m):
         f_man.u_sem.acquire()
         urls = f_man.items.keys()
         u = urls.pop()
+        f_man.items.pop(u)
         tar = get_host_path(u)
         if tar != None:
             pool.start_socket(tar, 1)
@@ -155,11 +155,12 @@ def read_sock (pool, f_man, m):
         if t == 0:
             f_man.add_feed(data)
         elif t == 1:
-            store_page(data, f_man)
+            print 'storing page'
+            store_page(data, m)
 
 
-def store_page(data, f_man):
-    path = f_man.conf['pag_dir'] + '/'
+def store_page(data, man):
+    path = man.conf['pag_dir'] + '/'
     f_name = str(time.time()).replace('.', '')
     f = open(path + f_name + '.html', 'w')
     f.write(data)

@@ -69,16 +69,24 @@ class SockPool:
     def start_socket(self, target, req_type):
         if self.f_sem.acquire(False):
             s = self.free.pop()
+            s = AsynSocket(self.phost, self.pport, self.ready,\
+                self.r_sem, req_type)
             s.start_connection(target)
         elif self.s_sem.acquire(False):
+            print 'Loading new socket'
             tmp = AsynSocket(self.phost, self.pport, self.ready,\
                 self.r_sem, req_type)
             tmp.start_connection(target)
             self.sock.append(tmp)
         else:
+            print 'waiting for free socket'
             self.f_sem.acquire()
+            print 'free socket acquired'
             s = free.pop()
+            s = AsynSocket(self.phost, self.pport, self.ready,\
+                self.r_sem, req_type)
             s.start_connection(f)
+        self.start_loop()
     
 
     def read_socket(self):
