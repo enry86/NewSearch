@@ -57,7 +57,8 @@ def read_file (filename):
 
 def write_file (filename, cont):
     f = open(filename, 'w')
-    f.write(cont)
+    cont_a = cont.decode('utf-8')
+    f.write(cont_a)
     f.close()
 
 def move_file (s_dir, d_dir, fname):
@@ -72,7 +73,8 @@ def call_srv (conf, cxml, files, srv):
     except OSError:
         pass
     for f in files:
-        cont = read_file(conf['repo'] + f)
+        cont_raw = read_file(conf['repo'] + '/' + f)
+        cont = unicode(cont_raw, errors = 'replace')
         res = srv.service.Enlighten(conf['key'], cont, cxml)
         write_file(conf['res'] + '/' + f[:-4] + 'xml', res)
         move_file(conf['repo'], conf['read'], f)
