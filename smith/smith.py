@@ -115,9 +115,9 @@ def get_feeds (filename):
     for l in f:
         l = l.replace('http://', '')
         i = l.find('/')
-        if i != -1:
+        if i != -1 and l[0] != '#':
             res.append((l[:i], l[i:]))
-        else:
+        elif l[0] != '#':
             print 'WARN: invalid feed - %s' % l
     f.close()
     return res
