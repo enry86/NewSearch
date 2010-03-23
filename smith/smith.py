@@ -13,10 +13,10 @@ Options:
 '''
 
 import threading
-import asocket
 import sys
 import getopt
 
+import sock_pool
 
 def get_proxy (conf, opt):
     res = True
@@ -84,46 +84,22 @@ def get_feeds (filename):
     return res
         
 
-def start_pool (conf, feeds, sock, ready, free, s_sem, r_sem, f_sem):
+def read_feeds (feeds, pool):
     for f in feeds:
-        if f_sem.acquire(False):
-            s = free.pop()
-            s.start_connection(f)
-        elif s_sem.acquire(False):
-            tmp = asocket.AsynSocket(conf['phost'], conf['pport'], ready,\
-                r_sem)
-            tmp.start_connection(f)
-            sock.append(tmp)
-        else:
-            f_sem.acquire()
-            s = free.pop()
-            s.start_connection(f)
-    asocket.start_loop()    
-    
+        pool.start_socket(f)
+    pool.start_loop()
 
-def read_sock (free, ready, r_sem, f_sem):
-    r_sem.acquire()
-    s = ready.pop()
-    print s.data
-    s.data = ''
-    free.append(s)
-    f_sem.release()
+def read_sock (pool):
+    print pool.read_socket() 
 
 
 def main ():
-    sock = []
-    free = []
-    ready = []
     conf = read_options()
     feeds = get_feeds(conf['feeds'])
-    ready_sem = threading.Semaphore(0)
-    free_sem = threading.Semaphore(0)
-    slot_sem = threading.Semaphore(conf['max_sock'])
-    pool_args = (conf, feeds, sock, ready, free, slot_sem, ready_sem,\
-        free_sem,)
-    thr = threading.Thread(target = start_pool, args = pool_args)
+    pool = sock_pool.SockPool(conf)
+    thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
     thr.start()
-    read_sock(free, ready, ready_sem, free_sem)
+    read_sock(pool)
 
 
 if __name__ == '__main__':
