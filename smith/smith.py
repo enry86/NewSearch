@@ -84,13 +84,31 @@ def get_feeds (filename):
     return res
         
 
-def setup_pool (conf, feeds, sock, free):
-    pass
+def start_pool (conf, feeds, sock, ready, free, s_sem, r_sem, f_sem):
+    for f in feeds:
+        if f_sem.acquire(False):
+            s = free.pop()
+            s.start_connection(f)
+        elif s_sem.acquire(False):
+            tmp = asocket.AsynSocket(conf['phost'], conf['pport'], ready,\
+                r_sem)
+            tmp.start_connection(f)
+            sock.append(tmp)
+        else:
+            f_sem.acquire()
+            s = free.pop()
+            s.start_connection(f)
+    asocket.start_loop()    
+    
 
-def read_sock (ready, r_sem):
+def read_sock (free, ready, r_sem, f_sem):
     r_sem.acquire()
     s = ready.pop()
     print s.data
+    s.data = ''
+    free.append(s)
+    f_sem.release()
+
 
 def main ():
     sock = []
@@ -99,9 +117,13 @@ def main ():
     conf = read_options()
     feeds = get_feeds(conf['feeds'])
     ready_sem = threading.Semaphore(0)
-    
-    asocket.start_loop()    
-
+    free_sem = threading.Semaphore(0)
+    slot_sem = threading.Semaphore(conf['max_sock'])
+    pool_args = (conf, feeds, sock, ready, free, slot_sem, ready_sem,\
+        free_sem,)
+    thr = threading.Thread(target = start_pool, args = pool_args)
+    thr.start()
+    read_sock(free, ready, ready_sem, free_sem)
 
 
 if __name__ == '__main__':

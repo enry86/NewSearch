@@ -18,9 +18,9 @@ class AsynSocket (asyncore.dispatcher):
         self.r_sem = r_sem
         
 
-    def start_connection (self, host, path):
+    def start_connection (self, (host, path)):
         if self.phost:
-            target = (phost, pport)
+            target = (self.phost, self.pport)
         else:
             target = (host, 80)
         url = 'http://%s%s' % (host, path)
