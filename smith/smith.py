@@ -139,11 +139,14 @@ def read_feeds (feeds, pool):
     pool.start_loop()
 
 
-def read_urls(f_man, pool):
-    for u in f_man.items:
+def read_urls(f_man, pool, m):
+    while not m.quit:
+        f_man.u_sem.acquire()
+        urls = f_man.items.keys()
+        u = urls.pop()
         tar = get_host_path(u)
         if tar != None:
-            pool.start_socket(get_host_path(u), 1)
+            pool.start_socket(tar, 1)
 
 
 def read_sock (pool, f_man, m):
@@ -177,8 +180,10 @@ def main ():
     r_thr = threading.Thread(target = read_sock, args = r_args)
     r_thr.setDaemon(True)
     r_thr.start()
-    time.sleep(10)
-    read_urls(f_man, pool)
+    u_args = (f_man, pool, man)
+    u_thr = threading.Thread(target = read_urls, args = u_args)
+    u_thr.setDaemon(True)
+    u_thr.start()
 
 if __name__ == '__main__':
     main()

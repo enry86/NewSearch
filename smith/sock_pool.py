@@ -12,7 +12,6 @@ class AsynSocket (asyncore.dispatcher):
     def __init__(self, phost, pport, ready, r_sem, req_type):
         asyncore.dispatcher.__init__(self)
         self.data = ''
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.phost = phost
         self.pport = pport
         self.ready = ready
@@ -26,6 +25,7 @@ class AsynSocket (asyncore.dispatcher):
         else:
             target = (host, 80)
         url = 'http://%s%s' % (host, path)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(target)
         self.buffer = 'GET %s HTTP/1.0\r\n\r\n' % url
 
