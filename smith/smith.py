@@ -9,10 +9,13 @@ Usage:
 Options:
     -p  proxy configuration (host:port)
     -s  maximum number of sockets used (default 100)
+    -d  pages directory
     -h  prints this help
 '''
 
 import threading
+import os
+import time
 import sys
 import getopt
 
@@ -21,9 +24,17 @@ import feedman
 
 
 class Manager:
-    def __init__(self):
+    def __init__(self, conf):
+        self.conf = conf
         self.quit = False
+        self.init_dirs()
 
+    
+    def init_dirs(self):
+        try:
+            os.mkdir(self.conf['pag_dir'])
+        except Exception:
+            pass
 
     def quit_com(self):
         self.quit = True
@@ -62,9 +73,10 @@ def read_options ():
     res['phost'] = None
     res['pport'] = None
     res['max_sock'] = 100
+    res['pag_dir'] = 'pages'
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv, 's:p:h')
+        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:h')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -82,6 +94,8 @@ def read_options ():
                 res['max_sock'] = int(v)
             except ValueError:
                 print 'WARN: Invalid number of sockets, using default'
+        elif o == '-d':
+            res['pag_dir'] = v
 
     try:
         res['feeds'] = args[1]
@@ -107,47 +121,64 @@ def get_feeds (filename):
             print 'WARN: invalid feed - %s' % l
     f.close()
     return res
-        
+
+
 def get_host_path (url):    
     url = url.replace('http://', '')
     i = url.find('/')
     if i != -1:
-        return (l[:i], l[i:])
+        res = (url[:i], url[i:])
     else:
-        return None
-        
-
+        res = None
+    return res
 
 
 def read_feeds (feeds, pool):
     for f in feeds:
-        pool.start_socket(f)
-        print 'socket started'
+        pool.start_socket(f, 0)
     pool.start_loop()
 
 
 def read_urls(f_man, pool):
     for u in f_man.items:
-        pool.start_socket(get_host_path(u))
+        tar = get_host_path(u)
+        if tar != None:
+            pool.start_socket(get_host_path(u), 1)
 
 
 def read_sock (pool, f_man, m):
     while not m.quit:
-        rss =  pool.read_socket()
-        f_man.add_feed(rss)
+        data, t =  pool.read_socket()
+        if t == 0:
+            f_man.add_feed(data)
+        elif t == 1:
+            store_page(data, f_man)
+
+
+def store_page(data, f_man):
+    path = f_man.conf['pag_dir'] + '/'
+    f_name = str(time.time()).replace('.', '')
+    f = open(path + f_name + '.html', 'w')
+    f.write(data)
+    f.close()
 
 
 def main ():
     conf = read_options()
     feeds = get_feeds(conf['feeds'])
-    man = Manager()
+    man = Manager(conf)
     man.start_cons()
     f_man = feedman.FeedManager()
     pool = sock_pool.SockPool(conf)
-    thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
-    thr.start()
-    read_sock(pool, f_man, man)
-
+    s_thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
+    s_thr.setDaemon(True)
+    s_thr.start()
+    r_args = (pool, f_man, man)
+    r_thr = threading.Thread(target = read_sock, args = r_args)
+    r_thr.setDaemon(True)
+    r_thr.start()
+    time.sleep(10)
+    read_urls(f_man, pool)
 
 if __name__ == '__main__':
     main()

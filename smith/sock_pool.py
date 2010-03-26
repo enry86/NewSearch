@@ -9,7 +9,7 @@ import socket
 import threading
 
 class AsynSocket (asyncore.dispatcher):
-    def __init__(self, phost, pport, ready, r_sem):
+    def __init__(self, phost, pport, ready, r_sem, req_type):
         asyncore.dispatcher.__init__(self)
         self.data = ''
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,6 +17,7 @@ class AsynSocket (asyncore.dispatcher):
         self.pport = pport
         self.ready = ready
         self.r_sem = r_sem
+        self.req_type = req_type
         
 
     def start_connection (self, (host, path)):
@@ -65,13 +66,13 @@ class SockPool:
         self.s_sem = threading.Semaphore(conf['max_sock'])
 
 
-    def start_socket(self, target):
+    def start_socket(self, target, req_type):
         if self.f_sem.acquire(False):
             s = self.free.pop()
             s.start_connection(target)
         elif self.s_sem.acquire(False):
             tmp = AsynSocket(self.phost, self.pport, self.ready,\
-                self.r_sem)
+                self.r_sem, req_type)
             tmp.start_connection(target)
             self.sock.append(tmp)
         else:
@@ -87,7 +88,7 @@ class SockPool:
         s.data = ''
         self.free.append(s)
         self.f_sem.release()
-        return res
+        return (res, s.req_type)
 
 
     def start_loop (self):
