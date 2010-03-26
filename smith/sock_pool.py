@@ -82,7 +82,6 @@ class SockPool:
 
     def read_socket(self):
         self.r_sem.acquire()
-        print 'r acquired'
         s = self.ready.pop()
         res = s.data
         s.data = ''
@@ -93,3 +92,4 @@ class SockPool:
 
     def start_loop (self):
         asyncore.loop()
+

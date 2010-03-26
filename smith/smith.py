@@ -17,6 +17,31 @@ import sys
 import getopt
 
 import sock_pool
+import feedman
+
+
+class Manager:
+    def __init__(self):
+        self.quit = False
+
+
+    def quit_com(self):
+        self.quit = True
+
+
+    def console(self):
+        s = ''
+        while not self.quit:
+            s = raw_input('> ')
+            if s == 'q':
+                self.quit_com()
+            
+    
+    def start_cons(self):
+        thr = threading.Thread(target = self.console)
+        thr.start()
+
+
 
 def get_proxy (conf, opt):
     res = True
@@ -57,7 +82,7 @@ def read_options ():
                 res['max_sock'] = int(v)
             except ValueError:
                 print 'WARN: Invalid number of sockets, using default'
-    
+
     try:
         res['feeds'] = args[1]
     except IndexError:
@@ -83,23 +108,45 @@ def get_feeds (filename):
     f.close()
     return res
         
+def get_host_path (url):    
+    url = url.replace('http://', '')
+    i = url.find('/')
+    if i != -1:
+        return (l[:i], l[i:])
+    else:
+        return None
+        
+
+
 
 def read_feeds (feeds, pool):
     for f in feeds:
         pool.start_socket(f)
+        print 'socket started'
     pool.start_loop()
 
-def read_sock (pool):
-    print pool.read_socket() 
+
+def read_urls(f_man, pool):
+    for u in f_man.items:
+        pool.start_socket(get_host_path(u))
+
+
+def read_sock (pool, f_man, m):
+    while not m.quit:
+        rss =  pool.read_socket()
+        f_man.add_feed(rss)
 
 
 def main ():
     conf = read_options()
     feeds = get_feeds(conf['feeds'])
+    man = Manager()
+    man.start_cons()
+    f_man = feedman.FeedManager()
     pool = sock_pool.SockPool(conf)
     thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
     thr.start()
-    read_sock(pool)
+    read_sock(pool, f_man, man)
 
 
 if __name__ == '__main__':
