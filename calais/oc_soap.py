@@ -11,7 +11,7 @@ Options:
     -p  directory of read pages
     -k  OpenCalais key
 '''
-
+import suds
 from suds.client import Client
 import os
 import sys
@@ -47,24 +47,26 @@ def read_opts (argv):
     return res
         
 def read_file (filename):
-    res = ''
+    tmp = ''
     f = open(filename, 'r')
     for l in f:
-        res += l
+        tmp += l
     f.close()
+    res = str(unicode(tmp, errors = 'ignore'))
     return res
 
 
 def write_file (filename, cont):
     f = open(filename, 'w')
-    cont_a = cont.decode('utf-8')
-    f.write(cont_a)
+    f.write(cont)
     f.close()
+
 
 def move_file (s_dir, d_dir, fname):
     c = read_file(s_dir + '/' + fname)
     write_file(d_dir + '/' + fname, c)
     os.remove(s_dir + '/' + fname)
+
 
 def call_srv (conf, cxml, files, srv):
     try:
@@ -73,16 +75,16 @@ def call_srv (conf, cxml, files, srv):
     except OSError:
         pass
     for f in files:
-        cont_raw = read_file(conf['repo'] + '/' + f)
-        cont = unicode(cont_raw, errors = 'replace')
+        cont = read_file(conf['repo'] + '/' + f)
         res = srv.service.Enlighten(conf['key'], cont, cxml)
-        write_file(conf['res'] + '/' + f[:-4] + 'xml', res)
+        res_str = res.encode('utf8', 'ignore')
+        write_file(conf['res'] + '/' + f[:-4] + 'xml', res_str)
         move_file(conf['repo'], conf['read'], f)
         
 
 def main ():
     conf = read_opts(sys.argv)
-    srv = Client(conf['wsdl_u'])#, http_proxy = 'http://proxyopera.unitn.it:3128')
+    srv = Client(conf['wsdl_u'])
     c_xml = read_file(conf['cxml'])
     try:
         files = os.listdir(conf['repo'])
@@ -90,7 +92,6 @@ def main ():
         print 'ERR: Invalid path repo'
         sys.exit(3)
     call_srv(conf, c_xml, files, srv) 
-    print res
 
 
 if __name__ == '__main__':

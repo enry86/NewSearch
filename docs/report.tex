@@ -1,0 +1,174 @@
+\documentclass{acm_proc_article-sp-sigmod07}
+
+\usepackage{listings}
+\lstset{
+language=XML,
+basicstyle=\footnotesize,
+numbers=left,
+numberstyle=\footnotesize,
+breaklines=true,
+breakatwhitespace=false
+}
+
+\begin{document}
+
+\title{Research Project in Data, Media and Knowledge}
+\numberofauthors{1}
+\author{Enrico Sartori}
+
+\maketitle
+
+\begin{abstract}
+This article presents an implementation of a search engine for news. The
+novelty in this approach is that the indexing of the documents is
+performed considering the concepts in the analyzed content.
+\end{abstract}
+
+\section{PROJECT STRUCTURE}
+In order to implement a complete search engine is necessary to realize a
+set of different cooperating tools.
+First of all a software able to retrieve the articles is needed, at this
+scope an rss crawler has been implemented.
+In order to speed up the crawling phase, the software uses asynchronous
+sockets and multithreading.
+
+When the initial corpus is available is necessary to extract the entities
+contained in the various documents, using the services already available
+on the web. The integration of these services into this platform has been
+reached using the SOAP interfaces available.
+
+Entities and documents are the basic data used for the construction of the
+hierarchy of concepts, which is the core of the retrieval system.
+The main section of the project is, in fact devoted to the construction of
+such a structure, exploiting the existing relationships between entities
+and concepts.
+
+The last part of the project regards the handling and the interpretation
+of the queries expressed by the user. The query should be represented in
+term of concepts and relationships between each other.
+
+\section{INPUT DATA}
+The input data, is composed by the text of the document itself, and set of
+entities appearing into it.
+The process of retrieving the entities can be performed using different
+existing services developed by the semantic web community.
+In particular has been used the services offered by OpenCalais and Okkam.
+Both these softwares offer a SOAP web service, which eases the
+programmatic access to these resources.
+
+\subsection{OpenCalais}
+The main method exported by this platform is the following one:
+\begin{verbatim}
+Enlighten(key, content, configuration)
+\end{verbatim}
+The most important argument of this function is content, which is the
+actual content of the article analyzed. The value returned by this call is
+a file containing the entities inside the text.
+
+The service can handle different output formats like XML, JSON, or
+Microformats. An XML representation of an entity can look like the
+following:
+\begin{lstlisting}
+<rdf:Description
+rdf:about="http://d.opencalais.com/dochash-1/87df7f5d-b838-3204-9d60-a2dcacb11257/Instance/5">
+<rdf:type rdf:resource="http://s.opencalais.com/1/type/sys/InstanceInfo"/>
+<c:docId
+rdf:resource="http://d.opencalais.com/dochash-1/87df7f5d-b838-3204-9d60-a2dcacb11257"/>
+<c:subject
+rdf:resource="http://d.opencalais.com/pershash-1/29d9574d-16e3-3737-9927-2d51b07be0e6"/>
+<!--Person: Dmitry Medvedev; -->
+<c:detection>
+[U.S. President Barack Obama, Russian President ]Dmitry Medvedev[ and
+Kazakh President Nursultan Nazarbayev]
+</c:detection>
+<c:prefix>U.S. President Barack Obama, Russian President </c:prefix>
+<c:exact>Dmitry Medvedev</c:exact>
+<c:suffix> and Kazakh President Nursultan Nazarbayev</c:suffix>
+<c:offset>2020</c:offset>
+<c:length>15</c:length>
+</rdf:Description>
+\end{lstlisting}
+
+In this example the entity related to Medvedev, the field c:subject gives
+a opencalais unique id to this entity. Then are given some information
+about the localization of the referred token in the text.
+
+In particular the service isolates the previous and following sentences,
+which can be useful to find occurrences of keywords related to this
+entity.
+
+\subsection{Okkam and Cogito}
+
+\subsection{Formal representation}
+The input data can be represented formally as a tuple of this kind:
+$$
+<D, E, f>
+$$
+Where $D$ is the initial document, $E$ is the set of entities contained in
+the text.
+$f$ is function defined as follows:
+$$
+f: E \rightarrow N
+$$
+
+\section{CONCEPTS}
+The system presented grounds on the idea of concepts, seen as an
+aggregation of entities linked together in term of their meaning.
+This approach leads to a flexible hierarchy which is used to index and
+retrieve documents.
+
+A formal representation of a concept is the following tuple:
+$$
+<E, C, g, h>
+$$
+$E$ is the set of entities related to this Concept, in higher levels of
+the hierarchy many concepts will have no relationships with single
+entities.
+
+$C$, instead, is the set of concepts which share a relationship with the
+current one. The relationship between concept is the basis of the
+hierarchical structure aforementioned.
+
+$g$ is a function defined as follows:
+$$
+g: E \rightarrow \mathcal{R}
+$$
+It returns the weight of the relationship between an entity and the
+current concept.
+
+The value of the relationship between the concepts and the ones appearing
+in the set $C$ is given by the function $h$. The formal definition of this
+function is:
+$$
+h: C \rightarrow \mathcal{R}
+$$
+
+\section{QUERIES}
+The user can express his queries in the form of relationship between
+concepts, and the intensity of these relations. 
+The query composed by the user can be therefore seen as a graph indicating
+the concepts that are required to be related to the documents, and the
+distance between each other.
+
+Formally speaking a query can be seen as a tuple in the following form:
+$$
+<C, f>
+$$
+Where $C$ is the set of selected concepts, and the function $f$ gives the
+distance between each of the concepts.
+$$
+f: C \times C \rightarrow \mathcal{R}
+$$
+
+ciao
+
+
+\bibliographystyle{abbrv}
+\bibliography{report}
+
+\newpage
+\null
+\newpage
+
+
+\end{document}
