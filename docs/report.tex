@@ -230,17 +230,24 @@ In addition, following this approach, the concepts are defined again in
 the same vectorial space, so is easy to compute distances between
 arbitrary concepts.
 
-The problem of building the structure using a similar approach is that
-a concept defined in this way gives no information about its meaning to
-the user.
+Following this approach the set of different concepts will be split in two
+different categories. The first one, which will be composed by the leaves
+of the dendogram, will contain concepts which represent directly clusters
+of entities. All other concepts, instead, will refers just to other
+concepts and not to entities anymore.
+
+A problem of building the structure using a similar approach is that a
+concept defined in this way gives no information about its meaning to the
+user.
 In fact this structure has to be used by the system as an index for the
 documents, but even by the user to browse the concepts.
 A solution can be found in a appropriate way of labeling the concepts,
 possibly looking to the most common keywords found in documents near to
 the concept to be labelled. 
 
-\subsection{Query answering}
-
+%\subsection{Query answering}
+%The main task of this structure is to provide a way to answer queries
+%based on concepts and relationship between each other.
 
 
 \bibliographystyle{abbrv}
