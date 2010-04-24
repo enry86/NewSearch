@@ -35,7 +35,7 @@ sockets and multithreading.
 When the initial corpus is available is necessary to extract the entities
 contained in the various documents, using the services already available
 on the web. The integration of these services into this platform has been
-reached using the SOAP interfaces available.
+implemented using the SOAP interfaces offered.
 
 Entities and documents are the basic data used for the construction of the
 hierarchy of concepts, which is the core of the retrieval system.
@@ -106,10 +106,14 @@ $$
 $$
 Where $D$ is the initial document, $E$ is the set of entities contained in
 the text.
-$f$ is function defined as follows:
+$f$ is a function defined as follows:
 $$
-f: E \rightarrow N
+f: E \rightarrow \mathcal{R}
 $$
+This function returns the relevance of this entity inside the original
+text. The OpenCalais takes care of computing this value for every entity
+found in the content.
+
 
 \section{CONCEPTS}
 The system presented grounds on the idea of concepts, seen as an
@@ -160,7 +164,83 @@ $$
 f: C \times C \rightarrow \mathcal{R}
 $$
 
-ciao
+\section{HIERARCHICAL STRUCTURE}
+The core of the system consists in a hierarchy of concepts constructed
+starting from the entities retrieved from the documents. Each concept in
+the structure gives information about the meaning of the articles
+associated with it.
+
+The main problem here is to find a formal way to construct this
+structure and associate documents to it. 
+
+\subsection{Hierarchy Construction}
+The construction of the hierarchical structure goes trough three different
+steps. First of all is necessary to define a vectorial space in which
+documents will be represented.
+
+Then, once the space is defined, the system should place the entities
+retrieved from the documents into it, obtaining an internal representation
+for the entities.
+
+After this comes the step of the actual construction of the hierarchy of
+concepts, grounding on the representation of the entities computed before.
+
+\subsubsection{Space definition}
+As said before the definition of a vectorial space is the first step of
+the hierarchy construction. In this case is possible to use the words
+found in the documents as dimensions of the space.
+The documents will have a vectorial representation given by the frequency
+of each token in the text.
+
+In order to have a reliable computation of these vectors, is necessary to
+perform some preprocessing of the text, like removing stopwords and
+stemming.
+
+\subsubsection{Entities representation}
+From each document the system will retrieve a set of entities, is obvious
+to expect that entities coming from similar documents will be strongly
+related one to each other.
+Therefore is necessary to find a representation able to preserve
+information about these relationship. 
+
+Moreover it's important to preserve a measure of "similarity" between
+entities and documents, in order to provide a basis on which compute a
+ranking of retrieved documents.
+
+Given these assumptions the most logical choice is to represent entities
+in the same space of the documents. 
+The position of entities in the space will be computed considering the
+measure of relevance of an entity inside an article.
+This measure is known by the system, given that is provided by the
+OpenCalais service.
+
+In this way, entities strongly related to a document will be actually near
+to that document in the vectorial space. Moreover entities often found in
+similar documents, will be near in their vectorial representation.
+
+\subsubsection{Concepts organization}
+At this point the system has given a vectorial representation to all the
+entities retrieved from the documents. A concept can be seen as a grouping
+of similar entities. In fact the measure of similarity between entities
+gives information on how frequently they are found in similar documents.
+
+Therefore a hierarchical structure of concepts can be given by the
+dendogram resulting from the clustering of the entities.
+In addition, following this approach, the concepts are defined again in
+the same vectorial space, so is easy to compute distances between
+arbitrary concepts.
+
+The problem of building the structure using a similar approach is that
+a concept defined in this way gives no information about its meaning to
+the user.
+In fact this structure has to be used by the system as an index for the
+documents, but even by the user to browse the concepts.
+A solution can be found in a appropriate way of labeling the concepts,
+possibly looking to the most common keywords found in documents near to
+the concept to be labelled. 
+
+\subsection{Query answering}
+
 
 
 \bibliographystyle{abbrv}
