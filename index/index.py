@@ -37,10 +37,10 @@ def read_opts (argv):
 
 
 def parse_files (xml_dir, lst):
-    for f in self.lst:
+    for f in lst:
         xml = minidom.parse(xml_dir + '/' + f)
         doc = xml.getElementsByTagName('c:document')
-        terms = process.preprocess(doc[0])
+        terms = process.preprocess(doc[0].toxml())
         
 
 def read_dir (d):

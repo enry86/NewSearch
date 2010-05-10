@@ -27,11 +27,12 @@ def read_sw_file (fn):
 
 
 def remove_stopw (lst):
+    res = []
     sw = read_sw_file('stopw.txt')
     for w in lst:
-        if w in sw:
-            lst.remove(w)
-    
+        if not w in sw:
+            res.append(w)
+    return res
 
 def stemming (lst):    
     ps = stemmer.PorterStemmer()
@@ -47,7 +48,7 @@ def preprocess (text):
     text = remove_tags(text)
     text = remove_punc(text)
     lst = text.split()
-    remove_stopw(lst)
+    lst = remove_stopw(lst)
     lst = stemming(lst)
     return lst
 
