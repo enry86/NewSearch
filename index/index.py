@@ -13,7 +13,6 @@ import sys
 import getopt
 import os
 import process
-
 from xml.dom import minidom
         
 
@@ -37,11 +36,12 @@ def read_opts (argv):
     return res
 
 
-def parse_files (self):
+def parse_files (xml_dir, lst):
     for f in self.lst:
         xml = minidom.parse(xml_dir + '/' + f)
         doc = xml.getElementsByTagName('c:document')
-
+        terms = process.preprocess(doc[0])
+        
 
 def read_dir (d):
     lst = os.listdir(d)
@@ -54,7 +54,8 @@ def read_dir (d):
 def main ():
     conf = read_opts(sys.argv)
     lst = read_dir(conf['dir'])
-    parse_files(conf['dir'], )
+    parse_files(conf['dir'], lst)
+
 
 if __name__ == '__main__':
     main()

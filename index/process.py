@@ -47,11 +47,7 @@ def preprocess (text):
     text = remove_tags(text)
     text = remove_punc(text)
     lst = text.split()
-    print len(lst)
     remove_stopw(lst)
-    print len(lst)
     lst = stemming(lst)
-    print len(lst)
-    remove_stopw(lst)
     return lst
 
