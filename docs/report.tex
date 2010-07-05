@@ -19,45 +19,148 @@ breakatwhitespace=false
 \maketitle
 
 \begin{abstract}
-This article presents an implementation of a search engine for news. The
-novelty in this approach is that the indexing of the documents is
-performed considering the concepts in the analyzed content.
+Most of the current search engines for documents and news on the web, are
+powered by keyword-based indexing systems. The main limit of similar
+techniques is that they often cannot detect similarities and relationships
+between documents, because they are not expressed at the keyword level.
+The aim of this paper is to propose a novel approach to document indexing
+and retrieval, able to recognize the actual topic treated in a document
+and infer relationships between documents, which could not be detected by
+looking just at the keywords.
+
+The problem we are addressing is to build a hierarchy of concepts, which
+gives the possibility to infer and discover relationships between articles
+and use them to build a search engine for news and articles.
 \end{abstract}
 
-\section{PROJECT STRUCTURE}
-In order to implement a complete search engine is necessary to realize a
-set of different cooperating tools.
-First of all a software able to retrieve the articles is needed, at this
-scope an rss crawler has been implemented.
-In order to speed up the crawling phase, the software uses asynchronous
-sockets and multithreading.
+\section{APPLICATION}
+The setting which we find more representative of the usage of this system
+is as the heart of a search engine for news. In our vision it provides the
+possibility to build an application used by an advanced category of users,
+like students or researchers, to find news and articles belonging to a
+specific topic, and related each other.
 
-When the initial corpus is available is necessary to extract the entities
-contained in the various documents, using the services already available
-on the web. The integration of these services into this platform has been
-implemented using the SOAP interfaces offered.
+We refer to a specific target of audience because the system supports,
+other than simple keyword-based queries, even semi structured queries.
+This could make the use of the search engine less intuitive for a non
+technical user.
 
-Entities and documents are the basic data used for the construction of the
-hierarchy of concepts, which is the core of the retrieval system.
-The main section of the project is, in fact devoted to the construction of
-such a structure, exploiting the existing relationships between entities
-and concepts.
+Moreover, the representation of the output, which is not a flat list of
+documents but we intended it as a network of articles reflecting the
+existing relationship between documents, is a powerful representation of
+the results, but can mislead unexperienced users.
 
-The last part of the project regards the handling and the interpretation
-of the queries expressed by the user. The query should be represented in
-term of concepts and relationships between each other.
+The main focus of the system is to retrieve news from different sources,
+in this environment is particularly difficult to state relationships
+between documents. In fact many informations aren't explicitly stated in
+the text, but, for brevity reason, most of the background is omitted and
+left to the reader knowledge.
+Therefore in a similar setting the problem of finding and exploiting
+hidden relationships between article becomes particularly relevant in
+order to retrieve the documents the user is searching for.
 
-\section{INPUT DATA}
-The input data, is composed by the text of the document itself, and set of
-entities appearing into it.
-The process of retrieving the entities can be performed using different
-existing services developed by the semantic web community.
-In particular has been used the services offered by OpenCalais and Okkam.
-Both these softwares offer a SOAP web service, which eases the
-programmatic access to these resources.
+\section{MOTIVATION}
+The main problems encountered by keyword-based search engines fall in
+different fields. First of all, the most common problem related to keyword
+indexing is that often the same concept or entity is express using totally
+different words.
+A simple example of this situation can be given by the expressions ``Barack
+Obama'' and ``President of the USA'' which clearly refers to the same
+entity but they don't share any word.
 
-\subsection{OpenCalais}
-The main method exported by this platform is the following one:
+A second, more deep, problem which afflicts search engines working just
+with keywords is that a generic topic is characterized by many
+different aspects. Many articles and documents belongs to the same broad
+topic possibly without naming any feature that a similar system could use
+to correctly categorize them.
+The network of the documents belonging to the same topic and the
+relationships between each other shapes a structure which cannot be
+detected by looking only at the keywords.
+An example of this can be given by an article speaking about a bomb
+explosion in Baghdad, which is a news clearly related to the American
+foreign policy. Probably the article won't contain any word which
+explicitly refers to this topic, because it's assumed that the reader
+already knows this kind of relationship.
+
+A third kind of problem that affects common search engine is that they
+fail to detect and exploit dependencies between events and topics.
+Considering only the keywords the system have no hints that an event can
+be related to a specific kind of content.
+
+A last point that we see as a motivation of our work regards the way in
+which output is presented to the user. Most search engines nowadays
+provide to the user a flat list of results, ranked with respect to some
+relevance metric. The aim of this approach is to give more visibility to
+the documents that the system retrieved as more strictly related to the
+query entered. 
+A similar structure doesn't match with the idea of the inferred network of
+documents on which our system grounds. We consider an output model that
+can explicitly show this network and illustrate the relationships between
+each node.
+
+\section{OUR SOLUTION}
+This section explains in the details our solution to the problems
+discussed before, it covers the all the different aspects of a search
+engine: the specification and meaning of the queries, the representation
+of the documents, their indexing and retrieval, and the description of the
+output model.
+
+\subsection{Query}
+In order to reach a compromise between usability of the system and
+expressiveness of the query, our platform supports different category of
+queries. As many common search engines it accepts queries expressed
+as a list of keywords, this is the most simple approach and permits a very
+intuitive and easy interaction with the system.
+
+A more formal representation of this query model can be expressed as:
+$$
+Q_{keywords} = \{w_1,\dots,w_n\}
+$$
+Which is basically a list of the n keywords inserted by the user.
+
+A slightly more complex kind of query supported by the system follows the
+semi-structured model. This kind of interaction, besides being more
+complex and less intuitive than the previous, increases the expressive
+power of the query.
+In fact it's possible to submit queries in the form ``City = London, Name
+= Jack'', which, intuitively, carries much more information than the
+equivalent ``London Jack'' as it would be expressed in the previous model.
+
+The formalization of this particular query model can be seen as a list of
+pairs (key, value).
+$$
+Q_{semi-structured} = \{<k_1, v_1>, \dots, <k_n, v_n>\}
+$$
+
+\subsection{Entities}
+One of the fundamental building block of our system is represented by the
+entities. We consider an entity any kind of object, like a public person,
+an enterprise, an event, which can be uniquely identified among all other
+objects.
+A concrete example of what we consider as an entity can be the city of
+Rome, which will have its own unique id. A different way to refer to Rome
+can be ``capital of Italy'' but it's just a different way to name the very
+same entity.
+
+The use of this level of abstraction permits to overcome the first problem
+we pointed out in the motivation section. In fact all the different way to
+refer to the same entity are grouped together and treated as a single
+object.
+
+Formally, inside the system, an entity is seen as an unique id, with
+associated a list of vector of keywords. Each vector contains the keywords
+used to refer to that entity.
+A formulation of the above concept is the following:
+$$
+E = <id, [\{w_{11}, \dots, w_{1m}\},\dots, \{w_{k1}, \dots, w_{kn}\}]>
+$$
+
+In order to retrieve the entities appearing in a document, we had to rely
+on existing services. The service we used for our system is OpenCalais,
+which permits programmatic access via a SOAP web-service.
+
+\paragraph{OpenCalais}
+The main method exported by this platform is the following:
 \begin{verbatim}
 Enlighten(key, content, configuration)
 \end{verbatim}
@@ -66,7 +169,7 @@ actual content of the article analyzed. The value returned by this call is
 a file containing the entities inside the text.
 
 The service can handle different output formats like XML, JSON, or
-Microformats. An XML representation of an entity can look like the
+Microformats. An XML representation of an entity looks like the
 following:
 \begin{lstlisting}
 <rdf:Description
@@ -89,173 +192,90 @@ Kazakh President Nursultan Nazarbayev]
 </rdf:Description>
 \end{lstlisting}
 
-In this example the entity related to Medvedev, the field c:subject gives
-a opencalais unique id to this entity. Then are given some information
-about the localization of the referred token in the text.
+In this example the entity corresponds to Dmitry Medvedev, the field
+c:subject specifies an unique id to this entity, given by the platform.
+Then are given some information about the localization of the referred
+token in the text.
 
-In particular the service isolates the previous and following sentences,
-which can be useful to find occurrences of keywords related to this
-entity.
+In particular the service isolates the sentences surrounding the
+reference to the entity. This can be useful to find occurrences of
+keywords related to this object.
 
-\subsection{Okkam and Cogito}
+\subsection{Document representation}
+As pointed out before, the main object with which the system deals are the
+entities appearing in the corpus of documents analyzed. Therefore the
+representation of the document has the function to make possible, once
+selected the set of entities related to the query submitted, to retrieve
+the documents related to that particular set of entities.
 
-\subsection{Formal representation}
-The input data can be represented formally as a tuple of this kind:
+We considered a useful choice for a document representation in this
+setting, to have the text of the article, associated with the set of
+entities retrieved.
+The OpenCalais system provides a measure of the relevance of an entity
+inside the document.
+Putting all the informations together we can define formally a document
+as:
 $$
-<D, E, f>
-$$
-Where $D$ is the initial document, $E$ is the set of entities contained in
-the text.
-$f$ is a function defined as follows:
-$$
-f: E \rightarrow \mathcal{R}
-$$
-This function returns the relevance of this entity inside the original
-text. The OpenCalais takes care of computing this value for every entity
-found in the content.
-
-
-\section{CONCEPTS}
-The system presented grounds on the idea of concepts, seen as an
-aggregation of entities linked together in term of their meaning.
-This approach leads to a flexible hierarchy which is used to index and
-retrieve documents.
-
-A formal representation of a concept is the following tuple:
-$$
-<E, C, g, h>
-$$
-$E$ is the set of entities related to this Concept, in higher levels of
-the hierarchy many concepts will have no relationships with single
-entities.
-
-$C$, instead, is the set of concepts which share a relationship with the
-current one. The relationship between concept is the basis of the
-hierarchical structure aforementioned.
-
-$g$ is a function defined as follows:
-$$
-g: E \rightarrow \mathcal{R}
-$$
-It returns the weight of the relationship between an entity and the
-current concept.
-
-The value of the relationship between the concepts and the ones appearing
-in the set $C$ is given by the function $h$. The formal definition of this
-function is:
-$$
-h: C \rightarrow \mathcal{R}
+D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}>
 $$
 
-\section{QUERIES}
-The user can express his queries in the form of relationship between
-concepts, and the intensity of these relations. 
-The query composed by the user can be therefore seen as a graph indicating
-the concepts that are required to be related to the documents, and the
-distance between each other.
+\subsection{Relationship between entities}
+Once the system has analyzed a set of documents, and the entities
+appearing into them have been defined, is necessary to find relationship
+between different entities. This step permits to reconstruct the structure
+of links between entities (and therefore between documents), existing at a
+higher level of abstraction.
 
-Formally speaking a query can be seen as a tuple in the following form:
+This analysis is composed of two different steps, first of all we have to
+look at the entities and the keywords characterizing them.
+From this informations we can isolate the sets of keywords which appears
+frequently together with a specific set of entities.
+In this way we are going to define a common context for pairs of entities,
+expressing the way in which they are related one to each other.
+
+Formally we define the explicit relationship between two entity as a
+vector of keywords as stated in the following:
 $$
-<C, f>
-$$
-Where $C$ is the set of selected concepts, and the function $f$ gives the
-distance between each of the concepts.
-$$
-f: C \times C \rightarrow \mathcal{R}
+C_{e}(e_{i}, e_{j}) = \{w_{1}, \dots w_{n}\}
 $$
 
-\section{HIERARCHICAL STRUCTURE}
-The core of the system consists in a hierarchy of concepts constructed
-starting from the entities retrieved from the documents. Each concept in
-the structure gives information about the meaning of the articles
-associated with it.
+Once we have a basic network of entities related to each other trough
+a context, is possible for us to infer new relationships. Following the
+paths inside the graph just created, we can discover that entities not
+directly connected, share a path to each other through other entities.
 
-The main problem here is to find a formal way to construct this
-structure and associate documents to it. 
+This particular step permits to find relationship which cannot be detected
+looking just at the keywords. A formalization of this kind of inferred
+relationship is stated by:
+$$
+C_{i}(e_{i}, e_{j}) = \{e_{k}, \dots, e_{h}\}
+$$
+where the set $\{e_{k}, \dots, e_{h}\}$ represents a path inside the
+previously computed graph.
 
-\subsection{Hierarchy Construction}
-The construction of the hierarchical structure goes trough three different
-steps. First of all is necessary to define a vectorial space in which
-documents will be represented.
+\subsection{Query Answering}
+Once we have built the graph of entities, which represent our indexing
+structure, the system can provide the query answering service.
+Answering a query is a process composed of different phases.
 
-Then, once the space is defined, the system should place the entities
-retrieved from the documents into it, obtaining an internal representation
-for the entities.
+First of all we need to analyze the query sent by the user and retrieve
+the entities directly correlated to the terms of the query.
+This part of the process varies in function of the kind of query
+submitted. As long as the system supports keyword based queries or
+semi-structured ones, we need different procedures to select the set of
+relevant entities.
 
-After this comes the step of the actual construction of the hierarchy of
-concepts, grounding on the representation of the entities computed before.
+When we have isolated the set of relevant entities, we need to expand our
+selection following the inferred relationship starting form the previously
+selected nodes.
 
-\subsubsection{Space definition}
-As said before the definition of a vectorial space is the first step of
-the hierarchy construction. In this case is possible to use the words
-found in the documents as dimensions of the space.
-The documents will have a vectorial representation given by the frequency
-of each token in the text.
+Now we need to map the set of entities we consider relevant with the
+query, down to the related documents, caring of maintaining the coherence
+of the relationships.
 
-In order to have a reliable computation of these vectors, is necessary to
-perform some preprocessing of the text, like removing stopwords and
-stemming.
-
-\subsubsection{Entities representation}
-From each document the system will retrieve a set of entities, is obvious
-to expect that entities coming from similar documents will be strongly
-related one to each other.
-Therefore is necessary to find a representation able to preserve
-information about these relationship. 
-
-Moreover it's important to preserve a measure of "similarity" between
-entities and documents, in order to provide a basis on which compute a
-ranking of retrieved documents.
-
-Given these assumptions the most logical choice is to represent entities
-in the same space of the documents. 
-The position of entities in the space will be computed considering the
-measure of relevance of an entity inside an article.
-This measure is known by the system, given that is provided by the
-OpenCalais service.
-
-In this way, entities strongly related to a document will be actually near
-to that document in the vectorial space. Moreover entities often found in
-similar documents, will be near in their vectorial representation.
-
-\subsubsection{Concepts organization}
-At this point the system has given a vectorial representation to all the
-entities retrieved from the documents. A concept can be seen as a grouping
-of similar entities. In fact the measure of similarity between entities
-gives information on how frequently they are found in similar documents.
-
-Therefore a hierarchical structure of concepts can be given by the
-dendogram resulting from the clustering of the entities.
-In addition, following this approach, the concepts are defined again in
-the same vectorial space, so is easy to compute distances between
-arbitrary concepts.
-
-Following this approach the set of different concepts will be split in two
-different categories. The first one, which will be composed by the leaves
-of the dendogram, will contain concepts which represent directly clusters
-of entities. All other concepts, instead, will refers just to other
-concepts and not to entities anymore.
-
-A problem of building the structure using a similar approach is that a
-concept defined in this way gives no information about its meaning to the
-user.
-In fact this structure has to be used by the system as an index for the
-documents, but even by the user to browse the concepts.
-A solution can be found in a appropriate way of labeling the concepts,
-possibly looking to the most common keywords found in documents near to
-the concept to be labelled. 
-
-%\subsection{Query answering}
-%The main task of this structure is to provide a way to answer queries
-%based on concepts and relationship between each other.
-
-
-\bibliographystyle{abbrv}
-\bibliography{report}
-
-\newpage
-\null
-\newpage
+The last step is to output the graph of the retrieved documents to the
+user, showing the relationship which is bounding the documents to each
+other.
 
 
 \end{document}
