@@ -55,6 +55,8 @@ def constr_rel (sent, db):
 def retr_verbs (s, db):
     res = []
     s = s.replace('.',' ')
+    s = s.replace('\'',' ')
+    s = s.replace('"',' ')
     s = s.replace(',',' ')
     s = s.replace(';',' ')
     s = s.replace(':',' ')

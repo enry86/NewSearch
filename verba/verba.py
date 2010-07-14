@@ -9,6 +9,7 @@ from xml.dom import minidom
 def read_opts (argv):
     res = {}
     res['db'] = 'verbs.db'
+    res['out_dir'] = 'docs'
     try:
         res['in_dir'] = argv[1].replace('/', '')
     except:
@@ -18,11 +19,10 @@ def read_opts (argv):
 
 def main ():
     conf = read_opts(sys.argv)
-    docs = read_files(conf['in_dir'], conf['db'])
-    output_docs(docs)
+    docs = read_files(conf['in_dir'], conf['out_dir'], conf['db'])
     
 
-def read_files (xml_dir, db):
+def read_files (xml_dir, out_dir, db):
     files = os.listdir(xml_dir)
     res = {}
     for f in files:
@@ -34,6 +34,7 @@ def read_files (xml_dir, db):
         ents, pos = get_entities(desc)
         rel = verbs_finder.get_relationship(text, pos, db)
         res[d_id] = (ents, rel)
+        output_doc(d_id, res[d_id], out_dir)
     return res 
 
 
@@ -109,20 +110,23 @@ def get_location (ent):
     return res
 
 
-def output_docs (docs):
-    for d in docs:
-        ent, rel = docs[d]
-        for e in ent:
-            print e, 'Relevance:', ent[e][1]
-            for k in ent[e][0]:
-                print k
-            print '\n'
-        print '\n'
-        for r in rel:
-            for i in r[0]:
-                print i
-            print r[1]
-            print '\n'
+def output_doc (d, doc, o_dir):
+    f = open(o_dir + '/' + d + '.nsd', 'w')
+    ent, rel = doc
+    for e in ent:
+        f.write(e + ' Relevance: ' + str(ent[e][1]) + '\n')
+        for k in ent[e][0]:
+            f.write(str(k))
+            f.write('\n')
+        f.write('\n')
+    f.write('\n')
+    for r in rel:
+        for i in r[0]:
+            f.write(str(i))
+            f.write('\n')
+        f.write(str(r[1]))
+        f.write('\n')
+    f.close()
 
 
 
