@@ -10,6 +10,7 @@ Options:
     -p  proxy configuration (host:port)
     -s  maximum number of sockets used (default 100)
     -d  pages directory
+    -o  database file 
     -h  prints this help
 '''
 
@@ -85,9 +86,10 @@ def read_options ():
     res['pport'] = None
     res['max_sock'] = 100
     res['pag_dir'] = 'pages'
+    res['database'] = '../newsearch.sqlite'
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:h')
+        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:o:h')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -107,6 +109,8 @@ def read_options ():
                 print 'WARN: Invalid number of sockets, using default'
         elif o == '-d':
             res['pag_dir'] = v
+        elif o == '-o':
+            res['database'] = v
 
     try:
         res['feeds'] = args[1]
@@ -219,6 +223,10 @@ def start_poll(man, pool):
     while not man.quit:
         time.sleep(10)
         pool.poll()
+
+
+
+
 
 
 def main ():
