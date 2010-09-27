@@ -66,18 +66,131 @@ class Manager:
 
 
 
-def get_proxy (conf, opt):
-    res = True
-    opt.replace('http://','')
-    if opt.count(':') != 1:
-        res = False
-    else:
-        conf['phost'], port = opt.split(':')
+class Smith:
+    conf = {}
+
+    def __init__ (self, conf):
+        self.conf = conf
+        self.feeds = self.get_feeds(conf['feeds'])
+        self.f_man = feedman.FeedManager()
+        self.pool = sock_pool.SockPool(conf)
+        self.man = Manager(self.conf, self.pool, self.f_man)
+        self.man.start_cons()
+
+    def start (self):
+        self.feeds_thr = self.__start_component(self.read_feeds)
+        self.pool_thr = self.__start_component(self.read_sock)
+        self.urls_thr = self.__start_component(self.read_urls)
+        self.poll_thr = self.__start_component(self.start_poll)
+   
+    def __start_component(self, fun):
+        thr = threading.Thread(target = fun)
+        thr.setDaemon(True)
+        thr.start()
+        return thr
+
+    def get_feeds (self, filename):
+        res = []
         try:
-            conf['pport'] = int(port)
+            f = open(filename)
         except Exception:
-            res = False
-    return res
+            return res
+        for l in f:
+            l = l.replace('http://', '')
+            i = l.find('/')
+            if i != -1 and l[0] != '#':
+                res.append((l[:i], l[i:]))
+            elif l[0] != '#':
+                print 'WARN: invalid feed - %s' % l
+        f.close()
+        return res
+
+
+    def get_host_path (self, url):    
+        url = url.replace('http://', '')
+        i = url.find('/')
+        if i != -1:
+            res = (url[:i], url[i:])
+        else:
+            res = None
+        return res
+
+
+    def read_feeds (self):
+        for f in self.feeds:
+            self.pool.start_socket(f, 0)
+
+
+    def read_urls(self):
+        while not self.man.quit:
+            self.f_man.u_sem.acquire()
+            urls = self.f_man.items.keys()
+            u = urls.pop()
+            v = self.f_man.items.pop(u)
+            self.f_man.items_proc[u] = v
+            tar = self.get_host_path(u)
+            if tar != None:
+                self.pool.start_socket(tar, 1)
+
+
+    def read_sock (self):
+        while not self.man.quit:
+            data, t =  self.pool.read_socket()
+            if t == 0:
+                self.f_man.add_feed(data[0])
+            elif t == 1:
+                self.store_page(data)
+
+
+    def build_header (self, str_h):
+        head = {}
+        fields = str_h.split('\n')
+        head['status'] = fields[0].strip()
+        fields.remove(fields[0])
+        for f in fields:
+            try:
+                k, v = f.split(': ')
+                head[k.strip()] = v.strip()
+            except ValueError:
+                pass
+        return head
+
+
+    def get_content (self, data):
+        str_h = data[:data.find('<')]
+        cont = data[data.find('<'):]
+        head = self.build_header(str_h)
+        return head, cont
+
+
+    def store_page (self, data):
+        head, cont = self.get_content(data[0])
+        st_ok = head['status'].find('200') != -1
+        st_mv = head['status'].find('301') != -1
+        st_fnd = head['status'].find('302') != -1
+        if st_ok:
+            path = self.conf['pag_dir'] + '/'
+            f_name = str(time.time()).replace('.', '')
+            f = open(path + f_name + '.html', 'w')
+            f.write(cont)
+            f.close()
+            self.man.pg_saved += 1
+        elif st_mv or st_fnd:
+            url = head['Location']
+            v = self.f_man.items_proc[data[1]]
+            self.f_man.items[url] = (v, 'redirected')
+            self.f_man.u_sem.release()
+        elif head['status'] == '':
+            v = self.f_man.items_proc[data[1]]
+            self.f_man.items[data[1]] = (v, 'retry')
+            self.f_man.u_sem.release()
+        self.f_man.items_proc.pop(data[1])
+        
+
+    def start_poll (self):
+        while not self.man.quit:
+            time.sleep(10)
+            self.pool.poll()
 
 
 def read_options ():
@@ -121,137 +234,24 @@ def read_options ():
     return res
 
 
-def get_feeds (filename):
-    res = []
-    try:
-        f = open(filename)
-    except Exception:
-        return res
-    for l in f:
-        l = l.replace('http://', '')
-        i = l.find('/')
-        if i != -1 and l[0] != '#':
-            res.append((l[:i], l[i:]))
-        elif l[0] != '#':
-            print 'WARN: invalid feed - %s' % l
-    f.close()
-    return res
-
-
-def get_host_path (url):    
-    url = url.replace('http://', '')
-    i = url.find('/')
-    if i != -1:
-        res = (url[:i], url[i:])
+def get_proxy (conf, opt):
+    res = True
+    opt.replace('http://','')
+    if opt.count(':') != 1:
+        res = False
     else:
-        res = None
-    return res
-
-
-def read_feeds (feeds, pool):
-    for f in feeds:
-        pool.start_socket(f, 0)
-
-
-def read_urls(f_man, pool, m):
-    while not m.quit:
-        f_man.u_sem.acquire()
-        urls = f_man.items.keys()
-        u = urls.pop()
-        v = f_man.items.pop(u)
-        f_man.items_proc[u] = v
-        tar = get_host_path(u)
-        if tar != None:
-            pool.start_socket(tar, 1)
-
-
-def read_sock (pool, f_man, m):
-    while not m.quit:
-        data, t =  pool.read_socket()
-        if t == 0:
-            f_man.add_feed(data[0])
-        elif t == 1:
-            store_page(data, f_man, m)
-
-
-def build_header (str_h):
-    head = {}
-    fields = str_h.split('\n')
-    head['status'] = fields[0].strip()
-    fields.remove(fields[0])
-    for f in fields:
+        conf['phost'], port = opt.split(':')
         try:
-            k, v = f.split(': ')
-            head[k.strip()] = v.strip()
-        except ValueError:
-            pass
-    return head
-
-
-def get_content (data):
-    str_h = data[:data.find('<')]
-    cont = data[data.find('<'):]
-    head = build_header(str_h)
-    return head, cont
-
-
-def store_page (data, f_man, man):
-    head, cont = get_content(data[0])
-    st_ok = head['status'].find('200') != -1
-    st_mv = head['status'].find('301') != -1
-    st_fnd = head['status'].find('302') != -1
-    if st_ok:
-        path = man.conf['pag_dir'] + '/'
-        f_name = str(time.time()).replace('.', '')
-        f = open(path + f_name + '.html', 'w')
-        f.write(cont)
-        f.close()
-        man.pg_saved += 1
-    elif st_mv or st_fnd:
-        url = head['Location']
-        v = f_man.items_proc[data[1]]
-        f_man.items[url] = (v, 'redirected')
-        f_man.u_sem.release()
-    elif head['status'] == '':
-        v = f_man.items_proc[data[1]]
-        f_man.items[data[1]] = (v, 'retry')
-        f_man.u_sem.release()
-    f_man.items_proc.pop(data[1])
-        
-
-def start_poll(man, pool):
-    while not man.quit:
-        time.sleep(10)
-        pool.poll()
-
-
-
-
+            conf['pport'] = int(port)
+        except Exception:
+            res = False
+    return res
 
 
 def main ():
     conf = read_options()
-    feeds = get_feeds(conf['feeds'])
-    f_man = feedman.FeedManager()
-    pool = sock_pool.SockPool(conf)
-    man = Manager(conf, pool, f_man)
-    man.start_cons()
-    s_thr = threading.Thread(target = read_feeds, args = (feeds, pool,))
-    s_thr.setDaemon(True)
-    s_thr.start()
-    r_args = (pool, f_man, man)
-    r_thr = threading.Thread(target = read_sock, args = r_args)
-    r_thr.setDaemon(True)
-    r_thr.start()
-    u_args = (f_man, pool, man)
-    u_thr = threading.Thread(target = read_urls, args = u_args)
-    u_thr.setDaemon(True)
-    u_thr.start()
-    p_args = (man, pool)
-    p_thr = threading.Thread(target = start_poll, args = p_args)
-    p_thr.setDaemon(True)
-    p_thr.start()
-
+    smith = Smith(conf)
+    smith.start()
 
 if __name__ == '__main__':
     main()
