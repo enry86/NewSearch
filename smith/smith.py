@@ -136,7 +136,7 @@ class Smith:
             u = urls.pop()
             v = self.f_man.items.pop(u)
             self.f_man.items_proc[u] = v
-            if conf['async']:
+            if self.conf['async']:
                 tar = self.get_host_path(u)
             else:
                 tar = u
@@ -174,16 +174,16 @@ class Smith:
         return head, cont
 
     def store_page (self, data):
-        if conf['async']:
+        if self.conf['async']:
             self.store_page_async (data)
         else:
-            write_page (data)
+            self.write_page (data[0])
 
     def write_page (self, data):
         path = self.conf['pag_dir'] + '/'
         f_name = str(time.time()).replace('.', '')
         f = open(path + f_name + '.html', 'w')
-        f.write(cont)
+        f.write(data)
         f.close()
         self.man.pg_saved += 1
 
