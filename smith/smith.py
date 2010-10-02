@@ -11,6 +11,7 @@ Options:
     -s  maximum number of sockets used (default 100)
     -d  pages directory
     -o  database file 
+    -a  forces asyncronous mode (buggy)
     -h  prints this help
 '''
 
@@ -20,7 +21,8 @@ import time
 import sys
 import getopt
 
-import sock_pool
+import async_sock_pool
+import threading_sock_pool
 import feedman
 
 
@@ -73,21 +75,27 @@ class Smith:
         self.conf = conf
         self.feeds = self.get_feeds(conf['feeds'])
         self.f_man = feedman.FeedManager()
-        self.pool = sock_pool.SockPool(conf)
+        if self.conf['async']:
+            self.pool = async_sock_pool.SockPool (conf)
+        else:
+            self.pool = threading_sock_pool.SockPool (conf)
         self.man = Manager(self.conf, self.pool, self.f_man)
         self.man.start_cons()
 
     def start (self):
-        self.feeds_thr = self.__start_component(self.read_feeds)
-        self.pool_thr = self.__start_component(self.read_sock)
-        self.urls_thr = self.__start_component(self.read_urls)
-        self.poll_thr = self.__start_component(self.start_poll)
-   
+        self.feeds_thr = self.__start_component (self.read_feeds)
+        self.pool_thr = self.__start_component (self.read_sock)
+        self.urls_thr = self.__start_component (self.read_urls)
+        if self.conf['async']:
+           self.poll_thr = self.__start_component(self.start_poll)
+
+
     def __start_component(self, fun):
         thr = threading.Thread(target = fun)
         thr.setDaemon(True)
         thr.start()
         return thr
+
 
     def get_feeds (self, filename):
         res = []
@@ -96,12 +104,12 @@ class Smith:
         except Exception:
             return res
         for l in f:
-            l = l.replace('http://', '')
-            i = l.find('/')
-            if i != -1 and l[0] != '#':
-                res.append((l[:i], l[i:]))
-            elif l[0] != '#':
-                print 'WARN: invalid feed - %s' % l
+            if l[0] != '#':
+                if self.conf['async']:
+                    tmp = get_host_path (l)
+                else:
+                    tmp = l
+                res.append (tmp)
         f.close()
         return res
 
@@ -128,7 +136,10 @@ class Smith:
             u = urls.pop()
             v = self.f_man.items.pop(u)
             self.f_man.items_proc[u] = v
-            tar = self.get_host_path(u)
+            if conf['async']:
+                tar = self.get_host_path(u)
+            else:
+                tar = u
             if tar != None:
                 self.pool.start_socket(tar, 1)
 
@@ -162,20 +173,28 @@ class Smith:
         head = self.build_header(str_h)
         return head, cont
 
-
     def store_page (self, data):
+        if conf['async']:
+            self.store_page_async (data)
+        else:
+            write_page (data)
+
+    def write_page (self, data):
+        path = self.conf['pag_dir'] + '/'
+        f_name = str(time.time()).replace('.', '')
+        f = open(path + f_name + '.html', 'w')
+        f.write(cont)
+        f.close()
+        self.man.pg_saved += 1
+
+
+    def store_page_async (self, data):
         head, cont = self.get_content(data[0])
         st_ok = head['status'].find('200') != -1
-        st_mv = head['status'].find('301') != -1
-        st_fnd = head['status'].find('302') != -1
+        st_red = self.__is_redir (head)
         if st_ok:
-            path = self.conf['pag_dir'] + '/'
-            f_name = str(time.time()).replace('.', '')
-            f = open(path + f_name + '.html', 'w')
-            f.write(cont)
-            f.close()
-            self.man.pg_saved += 1
-        elif st_mv or st_fnd:
+            write_page (data)
+        elif st_red:
             url = head['Location']
             v = self.f_man.items_proc[data[1]]
             self.f_man.items[url] = (v, 'redirected')
@@ -185,13 +204,18 @@ class Smith:
             self.f_man.items[data[1]] = (v, 'retry')
             self.f_man.u_sem.release()
         self.f_man.items_proc.pop(data[1])
-        
+    
+    def __is_redir (self, header):
+        errors = [301, 302, 303, 304, 305, 306, 307]
+        res = false
+        for e in errors:
+            res = res or head['status'].find(e) != -1
+        return res
 
     def start_poll (self):
         while not self.man.quit:
             time.sleep(10)
             self.pool.poll()
-
 
 def read_options ():
     res = {}
@@ -200,9 +224,10 @@ def read_options ():
     res['max_sock'] = 100
     res['pag_dir'] = 'pages'
     res['database'] = '../newsearch.sqlite'
+    res['async'] = False;
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:o:h')
+        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:o:ah')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -224,6 +249,8 @@ def read_options ():
             res['pag_dir'] = v
         elif o == '-o':
             res['database'] = v
+        elif o == '-a':
+            res['async'] = True;
 
     try:
         res['feeds'] = args[1]
