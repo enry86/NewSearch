@@ -213,31 +213,44 @@ setting, to have the text of the article, associated with the set of
 entities retrieved.
 The OpenCalais system provides a measure of the relevance of an entity
 inside the document.
+
+Another important feature that the system retrieves from the text are
+relationships existing between entities. The next section will give a
+definition of relationship for our system.
+
 Putting all the informations together we can define formally a document
 as:
 $$
-D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}>
+D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}, \{<\{e_{i} \dots e_{k}\}, \{v_{m} \dots v_{n} \}>\}>
 $$
 
 \subsection{Relationship between entities}
-Once the system has analyzed a set of documents, and the entities
-appearing into them have been defined, is necessary to find relationship
+Once the system has analyzed a of document, and the entities
+appearing into it have been defined, is necessary to find relationship
 between different entities. This step permits to reconstruct the structure
-of links between entities (and therefore between documents), existing at a
+of links between entities inside the document, existing at a
 higher level of abstraction.
 
-This analysis is composed of two different steps, first of all we have to
-look at the entities and the keywords characterizing them.
-From this informations we can isolate the sets of keywords which appears
-frequently together with a specific set of entities.
-In this way we are going to define a common context for pairs of entities,
-expressing the way in which they are related one to each other.
+What we consider a relationship insisting among a group of entities can be
+represented by the actions which those entities are performing together.
+In the natural language text, those actions are expressed in form of
+verbs. Our approach intend to isolate sentences in the text and retrieve
+the verbs which are linking together different entities.
 
-Formally we define the explicit relationship between two entity as a
-vector of keywords as stated in the following:
+Formally we define the explicit relationship between a set of entities as a
+vector of verbs as stated in the following:
 $$
-C_{e}(e_{i}, e_{j}) = \{w_{1}, \dots w_{n}\}
+C_{e}(e_{i}, e_{j}) = \{v_{1}, \dots v_{n}\}
 $$
+
+The network of relationships which results from this analysis can be
+represented as a graph, in which each node is a set of entities and the
+values on the arches are the verbs connecting the different sets of
+entities.
+
+This approach gives a higher level view on the meaning of the single
+keywords in the document, based on an effective interpretation of natural
+language sentence.
 
 Once we have a basic network of entities related to each other trough
 a context, is possible for us to infer new relationships. Following the
