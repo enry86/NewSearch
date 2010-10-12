@@ -221,10 +221,14 @@ definition of relationship for our system.
 Putting all the informations together we can define formally a document
 as:
 $$
-D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}, \{<\{e_{i} \dots e_{k}\}, \{v_{m} \dots v_{n} \}>\}>
+D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}, R>
 $$
 
-\subsection{Relationship between entities}
+In the above formula $R$ is a representation of the relationships
+existing between the entities in the document.
+
+
+\subsection{Relationship among entities}
 Once the system has analyzed a of document, and the entities
 appearing into it have been defined, is necessary to find relationship
 between different entities. This step permits to reconstruct the structure
@@ -237,7 +241,14 @@ In the natural language text, those actions are expressed in form of
 verbs. Our approach intend to isolate sentences in the text and retrieve
 the verbs which are linking together different entities.
 
-Formally we define the explicit relationship between a set of entities as a
+Therefore we can define the set $R$ appearing in the above formula more
+formally as:
+$$
+R = \{ <\{e_{i}, \dots, e_{k}\}, \{v_{n}, \dots, v_{m}\}>, \dots \}
+$$
+
+
+From this we can define the explicit relationship between two of entities as a
 vector of verbs as stated in the following:
 $$
 C_{e}(e_{i}, e_{j}) = \{v_{1}, \dots v_{n}\}
@@ -250,21 +261,35 @@ entities.
 
 This approach gives a higher level view on the meaning of the single
 keywords in the document, based on an effective interpretation of natural
-language sentence.
+language sentences.
 
-Once we have a basic network of entities related to each other trough
-a context, is possible for us to infer new relationships. Following the
-paths inside the graph just created, we can discover that entities not
-directly connected, share a path to each other through other entities.
+\subsection{Ghost entities}
+Once we obtained the graph of relationships existing among entities
+appearing in a document, we can infer further relationships, exploiting
+the similarities between graphs representing other documents.
 
-This particular step permits to find relationship which cannot be detected
-looking just at the keywords. A formalization of this kind of inferred
-relationship is stated by:
+The term ``Ghost Entity'' represent in fact an entity which is not stated
+explicitly in the document but can be added because appears in many other
+documents as related to an entity appearing in the document considered.
+
+The strength of the relationship with other entities in the document is
+computed considering different factors.
+We consider the distance in the graph between the entities, the number of
+documents in which the two entities appears as related weighted over a
+measure of similarity between the two documents.
+
+Formally, the value of the relationship is given by the formula:
 $$
-C_{i}(e_{i}, e_{j}) = \{e_{k}, \dots, e_{h}\}
+r(e_{i}, e_{j}) = \frac{ \sum_{d_{k} \in D_{e_{i}, e_{j}} } {sim(d, d_{k}) } \cdot
+dist_{d_{k}}(e_{i},e_{j}) }{|D_{e_{i},e_{j} }|}
 $$
-where the set $\{e_{k}, \dots, e_{h}\}$ represents a path inside the
-previously computed graph.
+
+Where the function $sim$ is the similarity between two documents, computed
+in terms of graph similarity, $dist$ is the distance between two entities
+inside a document $d_{k}$.
+The set $D_{e_{i}, e_{j}}$ is the set of documents in which the entities
+$e_{i}$ and $e_{j}$ appear together explicitly.
+
 
 \subsection{Query Answering}
 Once we have built the graph of entities, which represent our indexing

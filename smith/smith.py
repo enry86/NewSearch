@@ -106,7 +106,7 @@ class Smith:
         for l in f:
             if l[0] != '#':
                 if self.conf['async']:
-                    tmp = get_host_path (l)
+                    tmp = self.get_host_path (l)
                 else:
                     tmp = l
                 res.append (tmp)

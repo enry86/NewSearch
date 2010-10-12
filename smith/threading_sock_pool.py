@@ -9,6 +9,11 @@ class ThreadSocket:
     def __init__ (self, phost, pport, callback):
         self.phost = phost 
         self.pport = pport
+        if self.phost != None:
+            self.proxy = self.phost + ':' + self.pport
+            print self.proxy
+        else:
+            self.proxy = None
         self.maxredir = 50
         self.callback = callback
 
@@ -25,7 +30,11 @@ class ThreadSocket:
     def __setup_opener (self):
         handler = urllib2.HTTPRedirectHandler ()
         handler.max_redirections = self.maxredir
-        opener = urllib2.build_opener (handler)
+        if self.proxy != None:
+            proxy_h = urllib2.ProxyHandler ({'http' : self.proxy})
+            opener = urllib2.build_opener (handler, proxy_h)
+        else:
+            opener = urllib2.build_opener (handler)
         return opener
         
 
