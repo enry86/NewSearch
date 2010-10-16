@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="http://clearforest.com/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://clearforest.com/" xmlns:intf="http://clearforest.com/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<!--WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT)-->
+ <wsdl:types>
+  <schema elementFormDefault="qualified" targetNamespace="http://clearforest.com/" xmlns="http://www.w3.org/2001/XMLSchema">
+   <element name="Enlighten">
+    <complexType>
+     <sequence>
+      <element name="licenseID" type="xsd:string"/>
+      <element name="content" type="xsd:string"/>
+      <element name="paramsXML" type="xsd:string"/>
+     </sequence>
+    </complexType>
+   </element>
+   <element name="EnlightenResponse">
+    <complexType>
+     <sequence>
+      <element name="EnlightenResult" type="xsd:string"/>
+     </sequence>
+    </complexType>
+   </element>
+  </schema>
+ </wsdl:types>
+
+   <wsdl:message name="EnlightenResponse">
+
+      <wsdl:part element="impl:EnlightenResponse" name="parameters"/>
+
+   </wsdl:message>
+
+   <wsdl:message name="EnlightenRequest">
+
+      <wsdl:part element="impl:Enlighten" name="parameters"/>
+
+   </wsdl:message>
+
+   <wsdl:portType name="calaisSoap">
+
+      <wsdl:operation name="Enlighten">
+
+         <wsdl:input message="impl:EnlightenRequest" name="EnlightenRequest"/>
+
+         <wsdl:output message="impl:EnlightenResponse" name="EnlightenResponse"/>
+
+      </wsdl:operation>
+
+   </wsdl:portType>
+
+   <wsdl:binding name="calaisSoapSoapBinding" type="impl:calaisSoap">
+
+      <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="Enlighten">
+
+         <wsdlsoap:operation soapAction="http://clearforest.com/Enlighten"/>
+
+         <wsdl:input name="EnlightenRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="EnlightenResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
+
+   </wsdl:binding>
+
+   <wsdl:service name="calais">
+
+      <wsdl:port binding="impl:calaisSoapSoapBinding" name="calaisSoap">
+
+         <wsdlsoap:address location="http://api.opencalais.com/enlighten/"/>
+
+      </wsdl:port>
+
+   </wsdl:service>
+
+</wsdl:definitions>
