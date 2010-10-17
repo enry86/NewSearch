@@ -17,8 +17,10 @@ Options:
 import sys
 import os
 import getopt
-import verbs_finder
+#import verbs_finder
 from xml.dom import minidom
+import nltk_client
+
 
 def read_opts (argv):
     res = {}
@@ -49,6 +51,7 @@ def main ():
     
 
 def read_files (xml_dir, out_dir, db):
+    verbs_finder = nltk_client.Extractor()
     files = os.listdir(xml_dir)
     res = {}
     for f in files:
@@ -58,7 +61,7 @@ def read_files (xml_dir, out_dir, db):
         text = get_text(doc)
         desc = cont.getElementsByTagName('rdf:Description')
         ents, pos = get_entities(desc)
-        rel = verbs_finder.get_relationship(text, pos, db)
+        rel = verbs_finder.get_relationship(text, pos)
         res[d_id] = (ents, rel)
         output_doc(d_id, res[d_id], out_dir)
     return res 
