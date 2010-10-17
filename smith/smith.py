@@ -24,15 +24,16 @@ import getopt
 import async_sock_pool
 import threading_sock_pool
 import feedman
-
+import utils.database
 
 class Manager:
     
-    def __init__(self, conf, pool, f_man):
+    def __init__(self, conf, pool, f_man, smith):
         self.pg_saved = 0
         self.conf = conf
         self.pool = pool
         self.f_man = f_man
+        self.smith = smith
         self.quit = False
         self.init_dirs()
 
@@ -60,6 +61,8 @@ class Manager:
                 self.quit_com()
             elif s == 's':
                 self.status()
+            elif s == 'r':
+                self.smith.refresh_feeds()
             
     
     def start_cons(self):
@@ -73,13 +76,14 @@ class Smith:
 
     def __init__ (self, conf):
         self.conf = conf
+        self.db = utils.database.DataBase(conf['database'])
         self.feeds = self.get_feeds(conf['feeds'])
         self.f_man = feedman.FeedManager()
         if self.conf['async']:
             self.pool = async_sock_pool.SockPool (conf)
         else:
             self.pool = threading_sock_pool.SockPool (conf)
-        self.man = Manager(self.conf, self.pool, self.f_man)
+        self.man = Manager(self.conf, self.pool, self.f_man, self)
         self.man.start_cons()
 
     def start (self):
@@ -88,6 +92,9 @@ class Smith:
         self.urls_thr = self.__start_component (self.read_urls)
         if self.conf['async']:
            self.poll_thr = self.__start_component(self.start_poll)
+
+    def refresh_feeds (self):
+        self.feeds_thr = self.__start_component (self.read_feeds)
 
 
     def __start_component(self, fun):
@@ -136,12 +143,14 @@ class Smith:
             u = urls.pop()
             v = self.f_man.items.pop(u)
             self.f_man.items_proc[u] = v
-            if self.conf['async']:
-                tar = self.get_host_path(u)
-            else:
-                tar = u
-            if tar != None:
-                self.pool.start_socket(tar, 1)
+            if (not self.db.lookup_page((u,))):
+                self.db.insert_page((u,"prova",))
+                if self.conf['async']:
+                    tar = self.get_host_path(u)
+                else:
+                    tar = u
+                if tar != None:
+                    self.pool.start_socket(tar, 1)
 
 
     def read_sock (self):

@@ -1,5 +1,19 @@
 #!/usr/bin/python
 
+'''
+Verba
+
+usage:
+./verba.py [OPTIONS]
+
+Options:
+    -i  input dir
+    -o  output dir
+    -d  verbs database
+    -h  prints this help
+'''
+
+
 import sys
 import os
 import getopt
@@ -9,11 +23,23 @@ from xml.dom import minidom
 def read_opts (argv):
     res = {}
     res['db'] = 'verbs.db'
-    res['out_dir'] = 'docs'
+    res['out_dir'] = 'metadata'
+    res['in_dir'] = 'xml_files'
     try:
-        res['in_dir'] = argv[1].replace('/', '')
-    except:
-        res['in_dir'] = 'xml'
+        opts, args = getopt.gnu_getopt(argv, 'i:o:d:h')
+    except getopt.GetoptError, err:
+        print str(err)
+        sys.exit(2)
+    for o, v in opts:
+        if o == '-h':
+            print __doc__
+            sys.exit(0)
+        elif o == '-i':
+            res['in_dir'] = v
+        elif o == '-o':
+            res['out_dir'] = v
+        elif o == '-d':
+            res['db'] = v
     return res
 
 
@@ -111,7 +137,7 @@ def get_location (ent):
 
 
 def output_doc (d, doc, o_dir):
-    f = open(o_dir + '/' + d + '.nsd', 'w')
+    f = open(o_dir + '/' + d + '.metadata', 'w')
     ent, rel = doc
     for e in ent:
         f.write(e + ' Relevance: ' + str(ent[e][1]) + '\n')
