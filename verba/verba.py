@@ -69,6 +69,7 @@ def read_files (xml_dir, out_dir, db):
 
 def get_entities (ent_lst):
     doc = {}
+    doc_f = {}
     pos = []
     for e in ent_lst:
         id_ent = get_entity_id(e)
@@ -79,18 +80,18 @@ def get_entities (ent_lst):
                 loc = get_location(e)
                 pos.append((loc, id_ent))
                 try:
-                    doc[id_ent][0].append(kw)
+                    doc[id_ent].append(kw)
                 except:
-                    doc[id_ent] = [[kw], 0.0]
+                    doc[id_ent] = [kw]
             relev = e.getElementsByTagName('c:relevance')
             if relev != []:
                 rel = get_relevance(relev)
                 try:
-                    doc[id_ent][1] = rel
+                    doc_f[id_ent] =[doc[id_ent], rel]
                 except:
                     pass
     pos.sort()
-    return doc, pos
+    return doc_f, pos
 
 
 def get_text (doc):
