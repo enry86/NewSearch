@@ -6,7 +6,7 @@ class Extractor:
     def __init__ (self):
         self.gram = r""" 
                 NP: {<.*>+} 
-                }<VBD|IN>+{ 
+                }<VBD|VB|IN>+{ 
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
@@ -14,6 +14,7 @@ class Extractor:
     
     def get_relationship (self, text, pos):
         res = []
+        text = self.mark_ent (text, pos)
         sent = self.s_tok.tokenize(text)
         sent_ent = self.associate_ent (sent, pos)
         base = 0
@@ -23,6 +24,7 @@ class Extractor:
             base += len(s[0])
         print len(text), base
         return res
+
 
     def associate_ent (self, sent, pos):
         base = 0
@@ -36,9 +38,9 @@ class Extractor:
             res.append((s, tmp))
             base += len(s)
         return res
-    
+
+
     def retr_verbs (self, sen, base):
-        #txt = self.mark_ent (sen[0], sen[1], base)
         words = nltk.word_tokenize (sen[0])
         tags = nltk.pos_tag (words)
         tree = self.pars.parse(tags)
@@ -46,18 +48,18 @@ class Extractor:
         return verbs
 
     
-    def mark_ent (self, sen, ents, base):
+    def mark_ent (self, sen, ents):
         res = ''
         prev = 0
         cnt = 0
+        added = 0
         for e in ents:
-            pos = e[0][0] - base
-            print base, pos, len(sen)
-            res += sen[prev:pos] + ' _' + str(cnt)  + '_ '
+            pos = e[0][0]
+            marker =  ' _' + str(cnt)  + '_ '
+            res += sen[prev:pos] + marker
             prev = pos
             cnt += 1
         res += sen[prev:]
-        print res + '\n\n\n\n'
         return res
 
 
