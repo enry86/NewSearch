@@ -6,11 +6,12 @@ class Extractor:
     def __init__ (self):
         self.gram = r""" 
                 NP: {<.*>+} 
-                }<VBD|VB|IN>+{ 
+                }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{ 
+                VP: {<TO>?<MD>*<VB|VB[A-Z]>+<JJ>?}
+                S: {<S><CC><S>|<NP>*<VP><NP>*}
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
-
     
     def get_relationship (self, text, pos):
         res = []
@@ -44,6 +45,7 @@ class Extractor:
         words = nltk.word_tokenize (sen[0])
         tags = nltk.pos_tag (words)
         tree = self.pars.parse(tags)
+        tree.draw ()
         verbs = self.analyze_tree(tree)
         return verbs
 
