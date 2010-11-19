@@ -13,26 +13,24 @@ class Extractor:
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
-        graph = graphviz_out.Graph()
+        self.graph = graphviz_out.Graph()
     
 
     '''
     It works, really...
     '''
     def get_relationship (self, text, pos):
-        res = []
         text = self.mark_ent (text, pos)
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
-        sent_ent = self.associate_ent (sent, pos)
-        base = 0
-        for s in sent_ent:
-            verb_ent = self.retr_verbs(s, base)
-            res.append((s[1], verb_ent))
-            base += len(s[0])
-        return res
+        for s in sent:
+            if s.count('_') > 0:
+                self.parse_sent (s)
+        self.graph.output_graph ('prova')
+        return None
 
 
+    '''
     def associate_ent (self, sent, pos):
         base = 0
         ent = 0
@@ -45,14 +43,14 @@ class Extractor:
             res.append((s, tmp))
             base += len(s)
         return res
+    '''
 
 
-    def retr_verbs (self, sen, base):
-        words = nltk.word_tokenize (sen[0])
+    def parse_sent (self, sen):
+        words = nltk.word_tokenize (sen)
         tags = nltk.pos_tag (words)
-        tree = self.pars.parse(tags)
-        verbs = self.analyze_tree(tree)
-        return verbs
+        tree = self.pars.parse (tags)
+        self.analyze_sent (tree)
 
     
     def mark_ent (self, sen, ents):
@@ -69,37 +67,51 @@ class Extractor:
         res += sen[prev:]
         return res
 
+
     def analyze_sent (self, tree):
-        for t in tree.subtree ():
-            orig = list ()
-            dest = list ()
-            verb = list ()
-            if t.node == 'S':
-                self.analyze_sent (t)
-            elif t.node == 'NP':
-                if len(orig) == 0:
-                    orig = self.read_ent (t)
-                else:
-                    dest = self.read_ent (t)
-            elif t.node == 'VP':
-                verb = self.read_verb (t)
-        
+        orig = list ()
+        dest = list ()
+        verb = list ()
+        for t in tree:
+            if type (t) != tuple:
+                if t.node == 'S':
+                    self.analyze_sent (t)
+                elif t.node == 'NP':
+                    if len(orig) == 0:
+                        orig += self.read_ent (t)
+                    else:
+                        dest += self.read_ent (t)
+                elif t.node == 'VP':
+                    verb.append (self.read_verb (t))
+        self.update_graph (orig, dest, verb)
     
+
+    def update_graph (self, orig, dest, verb):
+        is_dest = len(dest) > 0
+        if is_dest:
+            for o in orig:
+                for d in dest:
+                    self.graph.add_arch ((str(o), str(d), ', '.join(verb)))
+        else:
+            for o in orig:
+                self.graph.add_arch ((str(o), str(o), ', '.join(verb)))
+
+
     def read_ent (self, tree):
         res = list()
         for w in tree:
             if w[0].count('_') == 2:
-                res.append(w[0])
+                res.append (int (w[0].replace('_','')))
         return res
     
 
     def read_verb (self, tree):
         res = ''
         for w in tree:
-            res += w + ' '
+            res += w[0] + ' '
         return res
 
-'''
+    '''
     def analyze_tree (self, tree):
         res = []
         for t in tree:
@@ -111,5 +123,5 @@ class Extractor:
             elif t.node.find('VP') >= 0:
                 res += (self.analyze_tree (t))
         return res
-'''
+    '''
 

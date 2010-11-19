@@ -159,13 +159,5 @@ def output_doc (d, doc, o_dir):
     f.close()
 
 
-
-        
-
-
-
-
-
-
 if __name__ == '__main__':
     main()
