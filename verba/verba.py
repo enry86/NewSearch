@@ -68,6 +68,7 @@ def read_files (xml_dir, out_dir, db):
     return res 
 
 
+
 def add_nodes (gph, ents, pos):
     for i in range (len (pos)):
         id = pos[i][1]
@@ -79,10 +80,15 @@ def add_nodes (gph, ents, pos):
             pass
 
 
+def get_entities (ent_list):
+    
+
+
+
 def get_entities (ent_lst):
-    doc = {}
-    doc_f = {}
-    pos = []
+    doc = dict ()
+    doc_f = dict ()
+    pos = list ()
     for e in ent_lst:
         id_ent = get_entity_id(e)
         if id_ent != None:
