@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import nltk
+import graphviz_out
 
 class Extractor:
     def __init__ (self):
@@ -12,10 +13,16 @@ class Extractor:
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
+        graph = graphviz_out.Graph()
     
+
+    '''
+    It works, really...
+    '''
     def get_relationship (self, text, pos):
         res = []
         text = self.mark_ent (text, pos)
+        text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
         sent_ent = self.associate_ent (sent, pos)
         base = 0
@@ -23,7 +30,6 @@ class Extractor:
             verb_ent = self.retr_verbs(s, base)
             res.append((s[1], verb_ent))
             base += len(s[0])
-        print len(text), base
         return res
 
 
@@ -45,7 +51,6 @@ class Extractor:
         words = nltk.word_tokenize (sen[0])
         tags = nltk.pos_tag (words)
         tree = self.pars.parse(tags)
-        tree.draw ()
         verbs = self.analyze_tree(tree)
         return verbs
 
@@ -64,7 +69,37 @@ class Extractor:
         res += sen[prev:]
         return res
 
+    def analyze_sent (self, tree):
+        for t in tree.subtree ():
+            orig = list ()
+            dest = list ()
+            verb = list ()
+            if t.node == 'S':
+                self.analyze_sent (t)
+            elif t.node == 'NP':
+                if len(orig) == 0:
+                    orig = self.read_ent (t)
+                else:
+                    dest = self.read_ent (t)
+            elif t.node == 'VP':
+                verb = self.read_verb (t)
+        
+    
+    def read_ent (self, tree):
+        res = list()
+        for w in tree:
+            if w[0].count('_') == 2:
+                res.append(w[0])
+        return res
+    
 
+    def read_verb (self, tree):
+        res = ''
+        for w in tree:
+            res += w + ' '
+        return res
+
+'''
     def analyze_tree (self, tree):
         res = []
         for t in tree:
@@ -76,4 +111,5 @@ class Extractor:
             elif t.node.find('VP') >= 0:
                 res += (self.analyze_tree (t))
         return res
+'''
 
