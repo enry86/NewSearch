@@ -1,5 +1,5 @@
 '''
-Tools for wirting a document graph in dot language
+Tools for writing a document graph in dot language
 '''
 
 class Graph:
@@ -16,11 +16,16 @@ class Graph:
     def output_graph (self, name):
         of = open (name + '.gv', 'w')
         of.write ('graph ' + name + ' {\n')
+        self.write_nodes (of)
         self.write_archs (of)
         of.write ('}\n')
         of.close ()
 
     
+    def write_nodes (self, of):
+        for n in self.nodes:
+            of.write (str (n[0]) + (' [label="%s"];\n' % n[1] ))
+
     def write_archs (self, of):
         for a in self.archs:    
             of.write (a[0] + ' -- ' + a[1] + ' [label="' + a[2]  + '"];\n')

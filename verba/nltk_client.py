@@ -26,8 +26,7 @@ class Extractor:
         for s in sent:
             if s.count('_') > 0:
                 self.parse_sent (s)
-        self.graph.output_graph ('prova')
-        return None
+        return self.graph
 
 
     '''

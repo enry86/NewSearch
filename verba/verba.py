@@ -56,15 +56,27 @@ def read_files (xml_dir, out_dir, db):
     res = {}
     for f in files:
         d_id = f[:-4]
-        cont = minidom.parse(xml_dir + '/'  + f)
-        doc = cont.getElementsByTagName('c:document')
-        text = get_text(doc)
-        desc = cont.getElementsByTagName('rdf:Description')
-        ents, pos = get_entities(desc)
-        rel = verbs_finder.get_relationship(text, pos)
-        res[d_id] = (ents, rel)
-        output_doc(d_id, res[d_id], out_dir)
+        cont = minidom.parse (xml_dir + '/'  + f)
+        doc = cont.getElementsByTagName ('c:document')
+        text = get_text (doc)
+        desc = cont.getElementsByTagName ('rdf:Description')
+        ents, pos = get_entities (desc)
+        gph = verbs_finder.get_relationship (text, pos)
+        add_nodes (gph, ents, pos)
+        gph.output_graph ('prova')
+        res[d_id] = (ents, gph)
     return res 
+
+
+def add_nodes (gph, ents, pos):
+    for i in range (len (pos)):
+        id = pos[i][1]
+        try:
+            keys = ents[id][0][0]
+            label = ' '.join (keys)
+            gph.add_node ((i, label))
+        except KeyError:
+            pass
 
 
 def get_entities (ent_lst):
