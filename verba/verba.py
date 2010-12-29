@@ -80,11 +80,49 @@ def add_nodes (gph, ents, pos):
             pass
 
 
-def get_entities (ent_list):
-    
+def get_entities (ent_lst):
+    doc = dict ()
+    pos = list ()
+    for e in ent_lst:
+        id_ent = get_entity_id (e)
+        if id_ent:
+            data = retrieve_data (e)
+            update_doc (doc, data, id_ent)
+            update_pos (pos, data, id_ent)
+    pos.sort ()
+    return doc, pos
+
+
+def retrieve_data (ent):
+    res = None
+    kws_phr = ent.getElementsByTagName ('c:exact')
+    rel_phr = ent.getElementsByTagName ('c:relevance')
+    if kws_phr and rel_phr:
+        kws = get_keywords (kws_phr)
+        rel = get_relevance (rel_phr)
+        loc = get_location (ent)
+        res = (kws, loc, rel)
+    return res
+
+
+def update_doc (doc, data, id_ent):
+    if data:
+        kws, loc, rel = data
+        if doc.has_key (id_ent):
+            doc[id_ent][0].append(kws)
+            doc[id_ent][1] = max(rel, doc[id_ent][1])
+        else:
+            doc[id_ent] = [kws, rel]
+
+
+def update_pos (pos, data, id_ent):
+    if data:
+        kws, loc, rel = data
+        pos.append ((loc, id_ent))
 
 
 
+'''
 def get_entities (ent_lst):
     doc = dict ()
     doc_f = dict ()
@@ -110,7 +148,7 @@ def get_entities (ent_lst):
                     pass
     pos.sort()
     return doc_f, pos
-
+'''
 
 def get_text (doc):
     res = None
