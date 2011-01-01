@@ -17,7 +17,6 @@ Options:
 import sys
 import os
 import getopt
-#import verbs_finder
 from xml.dom import minidom
 import nltk_client
 
@@ -74,8 +73,7 @@ def add_nodes (gph, ents, pos):
         id = pos[i][1]
         try:
             keys = ents[id][0][0]
-            label = ' '.join (keys)
-            gph.add_node ((i, label))
+            gph.add_node ((i, keys))
         except KeyError:
             pass
 
@@ -88,19 +86,42 @@ def get_entities (ent_lst):
         if id_ent:
             data = retrieve_data (e)
             update_doc (doc, data, id_ent)
-            update_pos (pos, data, id_ent)
+    prune_ents (doc)
+    pos = generate_pos (doc)
     pos.sort ()
     return doc, pos
+
+def generate_pos (ents):
+    res = list ()
+    for e in ents:
+        for p in ents[e][2]:
+            res.append ((p, e))
+    return res
+
+
+def prune_ents (ents):
+    to_rm = list ()
+    for e in ents:
+        rel = ents[e][1]
+        if not rel:
+            to_rm.append (e)
+    for r in to_rm:
+        ents.pop (r)
 
 
 def retrieve_data (ent):
     res = None
     kws_phr = ent.getElementsByTagName ('c:exact')
     rel_phr = ent.getElementsByTagName ('c:relevance')
-    if kws_phr and rel_phr:
+    if kws_phr:
         kws = get_keywords (kws_phr)
-        rel = get_relevance (rel_phr)
         loc = get_location (ent)
+        rel = None
+        res = (kws, loc, rel)
+    elif rel_phr:
+        kws = []
+        rel = get_relevance (rel_phr)
+        loc = None
         res = (kws, loc, rel)
     return res
 
@@ -109,16 +130,23 @@ def update_doc (doc, data, id_ent):
     if data:
         kws, loc, rel = data
         if doc.has_key (id_ent):
-            doc[id_ent][0].append(kws)
-            doc[id_ent][1] = max(rel, doc[id_ent][1])
-        else:
-            doc[id_ent] = [kws, rel]
+            if rel > 0 or rel == None:
+                if kws:
+                    doc[id_ent][0].append (' '.join(kws))
+                if loc: 
+                    doc[id_ent][2].append (loc)
+                doc[id_ent][1] = max(rel, doc[id_ent][1])
+            else:
+                doc.pop(id_ent)
+        elif kws:
+            doc[id_ent] = [[' '.join(kws)], rel, [loc]]
 
 
 def update_pos (pos, data, id_ent):
     if data:
         kws, loc, rel = data
-        pos.append ((loc, id_ent))
+        if rel > 0:
+            pos.append ((loc, id_ent))
 
 
 
