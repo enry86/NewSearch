@@ -159,7 +159,16 @@ In order to retrieve the entities appearing in a document, we had to rely
 on existing services. The service we used for our system is OpenCalais,
 which permits programmatic access via a SOAP web-service.
 
-\paragraph{OpenCalais}
+\paragraph*{OpenCalais}
+The scope of the OpenCalais project is to provide a service for locating
+Named Entities within a document. As we ground the representation of the
+documents in terms of this kind of objects, we can take advantage of
+similar services to perform the entity recognition task.
+
+The choice of OpenCalais in our implementation has been guided by its
+renown inside the semantic web community, and by the quality of the
+service offered.
+
 The main method exported by this platform is the following:
 \begin{verbatim}
 Enlighten(key, content, configuration)
@@ -169,37 +178,12 @@ actual content of the article analyzed. The value returned by this call is
 a file containing the entities inside the text.
 
 The service can handle different output formats like XML, JSON, or
-Microformats. An XML representation of an entity looks like the
-following:
-\begin{lstlisting}
-<rdf:Description
-rdf:about="http://d.opencalais.com/dochash-1/87df7f5d-b838-3204-9d60-a2dcacb11257/Instance/5">
-<rdf:type rdf:resource="http://s.opencalais.com/1/type/sys/InstanceInfo"/>
-<c:docId
-rdf:resource="http://d.opencalais.com/dochash-1/87df7f5d-b838-3204-9d60-a2dcacb11257"/>
-<c:subject
-rdf:resource="http://d.opencalais.com/pershash-1/29d9574d-16e3-3737-9927-2d51b07be0e6"/>
-<!--Person: Dmitry Medvedev; -->
-<c:detection>
-[U.S. President Barack Obama, Russian President ]Dmitry Medvedev[ and
-Kazakh President Nursultan Nazarbayev]
-</c:detection>
-<c:prefix>U.S. President Barack Obama, Russian President </c:prefix>
-<c:exact>Dmitry Medvedev</c:exact>
-<c:suffix> and Kazakh President Nursultan Nazarbayev</c:suffix>
-<c:offset>2020</c:offset>
-<c:length>15</c:length>
-</rdf:Description>
-\end{lstlisting}
-
-In this example the entity corresponds to Dmitry Medvedev, the field
-c:subject specifies an unique id to this entity, given by the platform.
-Then are given some information about the localization of the referred
-token in the text.
+Microformats. 
 
 In particular the service isolates the sentences surrounding the
 reference to the entity. This can be useful to find occurrences of
 keywords related to this object.
+
 
 \subsection{Document representation}
 As pointed out before, the main object with which the system deals are the
@@ -222,6 +206,7 @@ Putting all the informations together we can define formally a document
 as:
 $$
 D = <text, \{<e_{1},r_{1}>, \dots, <e_{n}, r_{n}>\}, R>
+\label{eq:doc}
 $$
 
 In the above formula $R$ is a representation of the relationships
@@ -241,7 +226,7 @@ In the natural language text, those actions are expressed in form of
 verbs. Our approach intend to isolate sentences in the text and retrieve
 the verbs which are linking together different entities.
 
-Therefore we can define the set $R$ appearing in the above formula more
+Therefore we can define the set $R$ appearing in formula \ref{eq:doc}
 formally as:
 $$
 R = \{ <\{e_{i}, \dots, e_{k}\}, \{v_{n}, \dots, v_{m}\}>, \dots \}
@@ -314,6 +299,156 @@ of the relationships.
 The last step is to output the graph of the retrieved documents to the
 user, showing the relationship which is bounding the documents to each
 other.
+
+\section{Implementation}
+This section describes some details of our implementation of the system,
+focusing on how we realized the ideas expressed in the previous section.
+The implementation covers all the different phases of the system
+lifecycle.
+
+In fact the architectural choices behind our implementation lead us to
+develop a set of independent tools, each one of them dedicated to perform
+a specific task inside the system. 
+
+The motivation behind this choice was to enhance the possibility of
+parallelization of the processes, even have different tools running of
+different machines.
+
+Moreover a similar architecture can tolerate more easily a crash of the
+machine, considering that each tool persists its data on disk is easy to
+recover the state of the system without losing the work done.
+
+The different tasks the system has to perform can be summarized by the
+following list:
+\begin{itemize}
+\item Crawling
+\item Query OpenCalais
+\item Document analysis and representation
+\item Index building
+\item Query answering
+\end{itemize}
+
+\subsection{Crawler}
+The tool implementing the crawler (\emph{smith.py}) takes care of
+downloading from the web a set of articles taken from a list of online
+newspapers.
+
+The approach followed for retrieving the articles is by reading the RSS
+feed of the various sources, fetching the new articles as they are
+published.
+
+The crawler stores the pages on disk, ready to be used by the other tools
+and updates a database of the retrieved pages, in order to avoid
+downloading multiple times the same article.
+
+In order to maximize the performances of the crawler is important to
+parallelize the requests to the different websites.
+The system can be used following two different approaches, it can work
+with asynchronous sockets or it can make use of multiple thread. The
+default behaviour is to dedicate a thread to each page fetching.
+
+\subsection{OpenCalais client}
+As underlined in the previous sections our implementation relies on the
+OpenCalais service for the Entity retrieval task. Therefore we developed a
+client application to the service (\emph{oc\_soap.py}), which uses the SOAP protocol to
+communicate with the OpenCalais Web service. 
+
+A drawback of this approach is obviously the latencies and the high amount
+of time spent during the communication with the service. An additional
+tool providing this service, hosted on the local machine, would improve
+greatly the performances, but, given the quality of the service offered by
+OpenCalais, we decided to use it for this test implementation of the
+system.
+
+The client sends the raw HTML of a page to the service, which, before
+analyzing the document, cleans the page received from the markup tags and
+extracts the relevant text.
+The results of the document analysis is sent back to the client as an XML
+representation of an RDF tree. 
+
+The client requires that the OpenCalais service inserts in the XML
+response the actual text used for the analysis. This data will be useful
+during the subsequent steps to retrieve additional information from the
+document.
+
+Once the XML file is stored on disk, the corresponding HTML file is
+deleted, in order to not waste resources keeping useless files.
+
+\subsection{Document analysis}
+The task of analyzing the document, along with the representation of the
+entities coming from OpenCalais, is pivotal in the lifecycle of the
+system. The tool implementing this task computes a representation of the
+document in the form of a graph of entities and the relationships between
+them.
+
+The tool implemented (\emph{verba.py}) takes care of parsing the XML
+coming from OpenCalais, retrieving the information about the entities.
+As specified previously the representation given to an entity is an Id
+(given by OpenCalais) and the list of words used to represent the entity
+in each occurrence in the document.
+
+To perform this task the tool can rely on the information given by
+OpenCalais, in fact the RDF explicits the exact sentence containing each
+entity.
+Parsing the XML file is easy to retrieve the list of keywords describing
+the entities.
+
+The second step in the documents analysis is to discover relationships
+between entities appearing in the document. The approach used in this
+task is to apply Natural Language Processing techniques in order to
+retrieve the verbs, and therefore the actions, linking together different
+entities.
+
+In our implementation we relied on the NLTK toolkit as a library of tools
+useful in performing NLP tasks. What the system does is constructing a
+parse tree of each sentence in the document and isolate the verbs
+referring to each entity.
+
+The construction of this grammar tree is performed through three phases,
+first we need to locate and mark the position of the entities inside the
+document, so once the tree is built is possible to recognize the entity
+inside of it and retrieve the correct verb.
+
+Given that the computation of the parse tree is a costly operation in
+terms of time, in this first step we take care of filter out the sentences
+which don't contains entities. In this way we can slightly reduce the
+effort needed to process an entire document.
+
+The second phase of the process is called Part Of Speech tagging (POS
+tagging) and resolves into a classification of each word in the sentence
+with respect to its grammatical role.
+The ``tag'' applied to each word permits to distinguish between nouns,
+verbs, conjunctions, articles, etc.
+
+This task is performed relying on pre-trained models offered by NLTK,
+otherwise is possible to train a classifier over a corpus of tagged
+sentences.
+
+Once the words in the sentence are tagged is possible to run a parser over
+the list of tags and build the actual tree. NLTK offers the possibility to
+build such a parser using a set of parsing rules defined by the
+programmer. 
+
+The technique used is to define these rules as regular expressions, which
+define the grammatical structure of a sentence in terms of POS tags.
+The resulting parsers reads the POS tags list applying the rules whenever
+possible, constructing the resulting tree structure.
+
+When the grammar tree of the sentence is built is possible to visit the
+tree in order to find the entities and retrieve the verbs which are
+referring to them. 
+The information gathered in this step is stored in a graph-like data
+structure, where the nodes are in fact the entities and the arches between
+them are the verbs linking them together.
+
+The graph resulting from the analysis of all the relevant sentences in the
+document is the final representation of the document itself in our system,
+and can be stored into a database for the subsequent operations.
+
+
+
+
+
 
 
 \end{document}
