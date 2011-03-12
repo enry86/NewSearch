@@ -73,7 +73,7 @@ def add_nodes (gph, ents, pos):
         id = pos[i][1]
         try:
             keys = ents[id][0][0]
-            gph.add_node ((i, keys))
+            gph.add_node ((id, i, keys))
         except KeyError:
             pass
 

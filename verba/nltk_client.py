@@ -20,6 +20,7 @@ class Extractor:
     It works, really...
     '''
     def get_relationship (self, text, pos):
+        print type(pos)
         text = self.mark_ent (text, pos)
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)

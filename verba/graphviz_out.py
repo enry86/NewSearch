@@ -4,11 +4,13 @@ Tools for writing a document graph in dot language
 
 class Graph:
     def __init__ (self):
-        self.nodes = []
-        self.archs = []
+        self.nodes = dict()
+        self.lookup = dict()
+        self.archs = list()
 
     def add_node (self, node):
-        self.nodes.append (node)
+        self.nodes[node[0]] = node[2]
+        self.lookup[node[1]] = node[0]
 
     def add_arch (self, arch):
         self.archs.append (arch)
@@ -23,7 +25,8 @@ class Graph:
 
     
     def write_nodes (self, of):
-        for n in self.nodes:
+        for k in self.nodes:
+            n = self.nodes[k]
             of.write (str (n[0]) + (' [label="%s"];\n' % n[1] ))
 
     def write_archs (self, of):
