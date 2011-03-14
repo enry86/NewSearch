@@ -3,49 +3,22 @@
 OC_Soap - Soap client for OpenCalais WebService
 
 Usage:
-    ./oc_soap.py <pages_repo> <configuration_file> [OPTIONS]
+    ./oc_soap.py <pages_repo> [OPTIONS]
 
 Options:
-    -w  wsdl url
+    -h  prints this help
     -r  directory of results
     -p  directory of read pages
     -k  OpenCalais key
 '''
-import suds
-from suds.client import Client
+
+import utils.calais as calais
 import os
 import sys
 import getopt
+import pickle
 
-def read_opts (argv):
-    res = {}
-    res['wsdl_u'] = 'http://api.opencalais.com/enlighten/?wsdl'
-    res['read'] = 'pages_read'
-    res['res'] = 'results'
-    res['key'] = '33q562d5y52rqsxvfwm9s27e'
-    try:
-        opts, args = getopt.gnu_getopt(argv, 'w:r:p:k:')
-    except getopt.GetoptError, err:
-        print str(err)
-        sys.exit(2)
-    for o, v in opts:
-        if o == '-w':
-            res['wsdl_u'] = v
-        elif o == '-r':
-            res['res'] = v
-        elif o == '-p':
-            res['read'] = v
-        elif o == '-k':
-            res['key'] = v
-    try:
-        res['repo'] = argv[1]
-        res['cxml'] = argv[2]
-    except IndexError:
-        print 'ERR: Argument error'
-        print __doc__
-        sys.exit(1)
-    return res
-        
+       
 def read_file (filename):
     tmp = ''
     f = open(filename, 'r')
@@ -93,6 +66,35 @@ def main ():
         sys.exit(3)
     call_srv(conf, c_xml, files, srv) 
 
+
+def read_opts (argv):
+    res = {}
+    res['read'] = 'pages_read'
+    res['res'] = 'results'
+    res['key'] = '33q562d5y52rqsxvfwm9s27e'
+    try:
+        opts, args = getopt.gnu_getopt(argv, 'w:r:p:h')
+    except getopt.GetoptError, err:
+        print str(err)
+        sys.exit(2)
+    for o, v in opts:
+        if o == '-h':
+            print __doc__
+            sys.exit(0)
+        elif o == '-r':
+            res['res'] = v
+        elif o == '-p':
+            res['read'] = v
+        elif o == '-k':
+            res['key'] = v
+    try:
+        res['repo'] = argv[1]
+    except IndexError:
+        print 'ERR: Argument error'
+        print __doc__
+        sys.exit(1)
+    return res
+ 
 
 if __name__ == '__main__':
     main()
