@@ -18,37 +18,37 @@ import sys
 import getopt
 import pickle
 
-       
-def read_file (filename):
-    tmp = ''
-    f = open(filename, 'r')
-    for l in f:
-        tmp += l
-    f.close()
-    res = str(unicode(tmp, errors = 'ignore'))
-    return res
+class CalaisClient:       
+    def read_file (self, filename):
+        tmp = ''
+        f = open(filename, 'r')
+        for l in f:
+            tmp += l
+        f.close()
+        res = str(unicode(tmp, errors = 'ignore'))
+        return res
 
 
-def write_file (filename, cont):
-    f = open(filename, 'w')
-    f.write(cont)
-    f.close()
+    def write_file (self, filename, cont):
+        f = open(filename, 'w')
+        f.write(cont)
+        f.close()
 
 
-def move_file (s_dir, d_dir, fname):
-    c = read_file(s_dir + '/' + fname)
-    write_file(d_dir + '/' + fname, c)
-    os.remove(s_dir + '/' + fname)
+    def move_file (self, s_dir, d_dir, fname):
+        c = read_file(s_dir + '/' + fname)
+        write_file(d_dir + '/' + fname, c)
+        os.remove(s_dir + '/' + fname)
 
 
-def call_srv (conf, cxml, files, srv):
-    try:
-        os.mkdir(conf['res'])
-        os.mkdir(conf['read'])
-    except OSError:
-        pass
-    for f in files:
-        cont = read_file(conf['repo'] + '/' + f)
+    def call_srv (self, conf, cxml, files, srv):
+        try:
+            os.mkdir(conf['res'])
+            os.mkdir(conf['read'])
+        except OSError:
+            pass
+        for f in files:
+            cont = read_file(conf['repo'] + '/' + f)
         res = srv.service.Enlighten(conf['key'], cont, cxml)
         res_str = res.encode('utf8', 'ignore')
         write_file(conf['res'] + '/' + f[:-4] + 'xml', res_str)
@@ -57,15 +57,13 @@ def call_srv (conf, cxml, files, srv):
 
 def main ():
     conf = read_opts(sys.argv)
-    srv = Client(conf['wsdl_u'])
-    c_xml = read_file(conf['cxml'])
     try:
         files = os.listdir(conf['repo'])
     except OSError:
         print 'ERR: Invalid path repo'
         sys.exit(3)
-    call_srv(conf, c_xml, files, srv) 
-
+    cli = CalaisClient (conf)
+    cli.call_srv ()
 
 def read_opts (argv):
     res = {}
