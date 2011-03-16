@@ -59,12 +59,13 @@ class CalaisClient:
             os.mkdir(self.conf['read'])
         except OSError:
             pass
-        for f in self.files:
+        for i,f in enumerate(self.files):
             cont = self.read_file (self.conf['repo'] + '/' + f)
             res = self.calais.analyze (cont, content_type = \
                 self.conf['type'], external_id = f)
             self.write_file(self.conf['res'] + '/' + f[:-4] + 'pickle', res)
             self.move_file(self.conf['repo'], self.conf['read'], f)
+            print 'saved file %d out of %d' % (i, len(self.files))
         
 
 def main ():
