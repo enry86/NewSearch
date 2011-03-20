@@ -18,11 +18,18 @@ class ThreadSocket:
         self.callback = callback
 
     def get_url (self, url, type):
+        code = 200
         opener = self.__setup_opener ()
         urllib2.install_opener (opener)
-        res = urllib2.urlopen (url)
-        if res.getcode () >= 400:
-            self.callback.on_failure (url, res.getcode ())
+        try:
+            res = urllib2.urlopen (url)
+            #code = res.gedcode ()
+            #print 'CODE:', code
+        except:
+            print 'Error on URL:', url
+            code = 404
+        if code >= 400:
+            self.callback.on_failure (url, code)
         else:
             data = res.read ()
             self.callback.on_success (url, type, data)

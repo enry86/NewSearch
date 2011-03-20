@@ -138,13 +138,14 @@ class Smith:
 
     def read_urls(self):
         while not self.man.quit:
-            self.f_man.u_sem.acquire()
+            self.f_man.u_sem.acquire ()
+            self.f_man.u_mut.acquire ()
             urls = self.f_man.items.keys()
             u = urls.pop()
             v = self.f_man.items.pop(u)
+            self.f_man.u_mut.release ()
             self.f_man.items_proc[u] = v
             if (not self.db.lookup_page((u,))):
-                self.db.insert_page((u,"prova",))
                 if self.conf['async']:
                     tar = self.get_host_path(u)
                 else:
@@ -186,13 +187,14 @@ class Smith:
         if self.conf['async']:
             self.store_page_async (data)
         else:
-            self.write_page (data[0])
+            self.write_page (data)
 
     def write_page (self, data):
         path = self.conf['pag_dir'] + '/'
         f_name = str(time.time()).replace('.', '')
+        self.db.insert_page((data[1],f_name,))
         f = open(path + f_name + '.html', 'w')
-        f.write(data)
+        f.write(data[0])
         f.close()
         self.man.pg_saved += 1
 
@@ -232,7 +234,7 @@ def read_options ():
     res['pport'] = None
     res['max_sock'] = 100
     res['pag_dir'] = 'pages'
-    res['database'] = '../newsearch.sqlite'
+    res['database'] = '../newsearch.db'
     res['async'] = False;
 
     try:
