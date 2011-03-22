@@ -11,6 +11,7 @@ Options:
     -s  maximum number of sockets used (default 100)
     -d  pages directory
     -o  database file 
+    -c  refresh cycle period
     -a  forces asyncronous mode (buggy)
     -h  prints this help
 '''
@@ -53,8 +54,11 @@ class Manager:
         print 'Pages saved:', self.pg_saved
         print 'Working sockets:', self.pool.working
 
+
     def console(self):
         s = ''
+        if self.conf['cycle']:
+            print 'Refresh time: %s minutes' % self.conf['cycle']
         while not self.quit:
             s = raw_input('> ')
             if s == 'q':
@@ -62,7 +66,7 @@ class Manager:
             elif s == 's':
                 self.status()
             elif s == 'r':
-                self.smith.refresh_feeds()
+                self.smith.refresh_feeds ()
             
     
     def start_cons(self):
@@ -94,7 +98,10 @@ class Smith:
            self.poll_thr = self.__start_component(self.start_poll)
 
     def refresh_feeds (self):
-        self.feeds_thr = self.__start_component (self.read_feeds)
+        if not self.conf['cycle']:
+            self.feeds_thr = self.__start_component (self.read_feeds)
+        else:
+            print 'Auto refresh mode'
 
 
     def __start_component(self, fun):
@@ -130,11 +137,24 @@ class Smith:
             res = None
         return res
 
-
     def read_feeds (self):
+        if not self.conf['cycle']:
+            self.read_feeds_inter ()
+        else:
+            self.read_feeds_auto ()
+
+
+    def read_feeds_auto (self):
+        while not self.man.quit:
+            for f in self.feeds:
+                self.pool.start_socket(f, 0)
+            time.sleep (self.conf['cycle'] * 60)
+            print 'Auto refresh feeds'
+
+
+    def read_feeds_inter (self):
         for f in self.feeds:
             self.pool.start_socket(f, 0)
-
 
     def read_urls(self):
         while not self.man.quit:
@@ -234,11 +254,12 @@ def read_options ():
     res['pport'] = None
     res['max_sock'] = 100
     res['pag_dir'] = 'pages'
-    res['database'] = '../newsearch.db'
+    res['database'] = 'newsearch.db'
     res['async'] = False;
+    res['cycle'] = 0;
 
     try:
-        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:o:ah')
+        opts, args = getopt.gnu_getopt(sys.argv, 's:p:d:o:c:ah')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -256,6 +277,11 @@ def read_options ():
                 res['max_sock'] = int(v)
             except ValueError:
                 print 'WARN: Invalid number of sockets, using default'
+        elif o == '-c':
+            try:
+                res['cycle'] = int(v)
+            except ValueError:
+                print 'WARN: Invalid period of cycle, going interactive'
         elif o == '-d':
             res['pag_dir'] = v
         elif o == '-o':
