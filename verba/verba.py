@@ -47,7 +47,7 @@ def read_opts (argv):
 def main ():
     conf = read_opts(sys.argv)
     docs = read_files(conf['in_dir'], conf['out_dir'], conf['db'])
-    
+
 
 def read_files (xml_dir, out_dir, db):
     verbs_finder = nltk_client.Extractor()
@@ -64,7 +64,7 @@ def read_files (xml_dir, out_dir, db):
         add_nodes (gph, ents, pos)
         gph.output_graph ('prova')
         res[d_id] = (ents, gph)
-    return res 
+    return res
 
 
 
@@ -76,6 +76,7 @@ def add_nodes (gph, ents, pos):
             gph.add_node ((id, i, keys))
         except KeyError:
             pass
+
 
 
 def get_entities (ent_lst):
@@ -133,7 +134,7 @@ def update_doc (doc, data, id_ent):
             if rel > 0 or rel == None:
                 if kws:
                     doc[id_ent][0].append (' '.join(kws))
-                if loc: 
+                if loc:
                     doc[id_ent][2].append (loc)
                 doc[id_ent][1] = max(rel, doc[id_ent][1])
             else:
@@ -209,7 +210,7 @@ def get_relevance (rel):
     value = str(node.nodeValue)
     res = float(value)
     return res
-    
+
 
 def get_location (ent):
     res = None
