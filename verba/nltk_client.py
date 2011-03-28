@@ -1,26 +1,25 @@
-#!/usr/bin/python
+hehe#!/usr/bin/python
 
 import nltk
 import graphviz_out
 
 class Extractor:
     def __init__ (self):
-        self.gram = r""" 
-                NP: {<.*>+} 
-                }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{ 
+        self.gram = r"""
+                NP: {<.*>+}
+                }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{
                 VP: {<TO>?<MD>*<VB|VB[A-Z]>+<JJ>?}
                 S: {<S><CC><S>|<NP>*<VP><NP>*}
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
         self.graph = graphviz_out.Graph()
-    
+
 
     '''
     It works, really...
     '''
     def get_relationship (self, text, pos):
-        print type(pos)
         text = self.mark_ent (text, pos)
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
@@ -52,7 +51,7 @@ class Extractor:
         tree = self.pars.parse (tags)
         self.analyze_sent (tree)
 
-    
+
     def mark_ent (self, sen, ents):
         res = ''
         prev = 0
@@ -84,7 +83,7 @@ class Extractor:
                 elif t.node == 'VP':
                     verb.append (self.read_verb (t))
         self.update_graph (orig, dest, verb)
-    
+
 
     def update_graph (self, orig, dest, verb):
         is_dest = len(dest) > 0
@@ -103,7 +102,7 @@ class Extractor:
             if w[0].count('_') == 2:
                 res.append (int (w[0].replace('_','')))
         return res
-    
+
 
     def read_verb (self, tree):
         res = ''
@@ -124,4 +123,3 @@ class Extractor:
                 res += (self.analyze_tree (t))
         return res
     '''
-

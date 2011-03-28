@@ -17,8 +17,8 @@ import pickle
 import sys
 import os
 import getopt
-from xml.dom import minidom
 import nltk_client
+
 
 
 class Verba_Pickle:
@@ -26,6 +26,7 @@ class Verba_Pickle:
         self.conf = conf
         fnames = os.listdir (conf['in_dir'])
         self.docs = self.__read_files (fnames)
+        self.ext = nltk_client.Extractor ()
 
     def __read_files (fnames):
         res = list ()
@@ -36,6 +37,13 @@ class Verba_Pickle:
             fi.close ()
             res.append (id, ob)
         return res
+
+    def analyze_docs (slef):
+        for d in self.docs:
+            pass
+
+
+
 
 
 
