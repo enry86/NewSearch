@@ -1,4 +1,4 @@
-hehe#!/usr/bin/python
+#!/usr/bin/python
 
 import nltk
 import graphviz_out
@@ -19,39 +19,26 @@ class Extractor:
     '''
     It works, really...
     '''
-    def get_relationship (self, text, pos):
-        text = self.mark_ent (text, pos)
+    def get_relationship (self, doc_cal):
+        text = doc_cal.doc['info']['document']
+        #text = self.mark_ent (text, pos)
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
         for s in sent:
-            if s.count('_') > 0:
-                self.parse_sent (s)
+            self.parse_sent (s)
         return self.graph
 
 
-    '''
-    def associate_ent (self, sent, pos):
-        base = 0
-        ent = 0
-        res = []
-        for s in sent:
-            tmp = []
-            while ent < len(pos) and pos[ent][0][0] < (base + len(s)):
-                tmp.append(pos[ent])
-                ent += 1
-            res.append((s, tmp))
-            base += len(s)
-        return res
-    '''
 
 
     def parse_sent (self, sen):
         words = nltk.word_tokenize (sen)
         tags = nltk.pos_tag (words)
         tree = self.pars.parse (tags)
+        tree.draw ()
         self.analyze_sent (tree)
 
-
+    '''
     def mark_ent (self, sen, ents):
         res = ''
         prev = 0
@@ -65,7 +52,7 @@ class Extractor:
             cnt += 1
         res += sen[prev:]
         return res
-
+        '''
 
     def analyze_sent (self, tree):
         orig = list ()
@@ -109,17 +96,3 @@ class Extractor:
         for w in tree:
             res += w[0] + ' '
         return res
-
-    '''
-    def analyze_tree (self, tree):
-        res = []
-        for t in tree:
-            if type(t) == tuple:
-                if t[1].find('VB') >= 0:
-                    res.append(t[0])
-            elif t.node == 'S':
-                res += (self.analyze_tree (t))
-            elif t.node.find('VP') >= 0:
-                res += (self.analyze_tree (t))
-        return res
-    '''

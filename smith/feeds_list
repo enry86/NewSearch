@@ -10,7 +10,7 @@ http://www.telegraph.co.uk/news/worldnews/rss
 http://hosted2.ap.org/atom/APDEFAULT/cae69a7523db45408eeb2b3a98c0c9c5
 http://feeds.foxnews.com/foxnews/world
 http://www.npr.org/rss/rss.php?id=1004
-http://rss.wn.com/English/keyword/world
+#http://rss.wn.com/English/keyword/world
 http://rss.news.yahoo.com/rss/world
 #http://feeds.washingtonpost.com/rss/world
 http://science.nasa.gov/feeds/science-at-nasa-news/

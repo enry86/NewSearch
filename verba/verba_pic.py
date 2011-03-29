@@ -4,7 +4,7 @@
 Verba
 
 usage:
-./verba.py [OPTIONS]
+./verba_pic.py [OPTIONS]
 
 Options:
     -i  input dir
@@ -28,30 +28,26 @@ class Verba_Pickle:
         self.docs = self.__read_files (fnames)
         self.ext = nltk_client.Extractor ()
 
-    def __read_files (fnames):
+    def __read_files (self, fnames):
         res = list ()
         for fn in fnames:
             id = fn[:fn.find('.pickle')]
-            fi = open(fn)
+            fi = open(self.conf['in_dir'] + '/' + fn)
             ob = pickle.load (fi)
             fi.close ()
-            res.append (id, ob)
+            res.append ((id, ob))
         return res
 
-    def analyze_docs (slef):
-        for d in self.docs:
-            pass
-
-
-
-
+    def analyze_docs (self):
+        for i, d in self.docs:
+            graph = self.ext.get_relationship (d)
 
 
 def read_opts (argv):
     res = dict()
-    res['out_dir'] = 'metadata'
-    res['in_dir'] = 'xml_files'
-    res['graph_dir'] = 'graphs'
+    res['out_dir'] = 'test_out'
+    res['in_dir'] = 'test_in'
+    res['graph_dir'] = 'test_graph'
     try:
         opts, args = getopt.gnu_getopt(argv, 'i:o:c:h')
     except getopt.GetoptError, err:
@@ -74,3 +70,8 @@ def read_opts (argv):
 def main ():
     conf = read_opts(sys.argv)
     verba = Verba_Pickle (conf)
+    verba.analyze_docs ()
+
+
+if __name__ == '__main__':
+    main ()

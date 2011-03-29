@@ -19,7 +19,7 @@ import sys
 import getopt
 import pickle
 
-class CalaisClient:       
+class CalaisClient:
     def __init__ (self, conf):
         self.conf = conf
         try:
@@ -30,7 +30,7 @@ class CalaisClient:
         self.calais = calais.Calais(conf['key'], submitter='NewSearch')
         self.calais.processing_directives['omitOutputtingOriginalText'] = 'false'
         self.calais.processing_directives['contentType'] = conf['type']
-        
+
 
 
     def read_file (self, filename):
@@ -66,7 +66,7 @@ class CalaisClient:
             self.write_file(self.conf['res'] + '/' + f[:-4] + 'pickle', res)
             self.move_file(self.conf['repo'], self.conf['read'], f)
             print 'saved file %d out of %d' % (i, len(self.files))
-        
+
 
 def main ():
     conf = read_opts(sys.argv)
@@ -103,8 +103,7 @@ def read_opts (argv):
         print __doc__
         sys.exit(1)
     return res
- 
+
 
 if __name__ == '__main__':
     main()
-
