@@ -2,6 +2,7 @@
 
 import nltk
 import graphviz_out
+import re
 
 class Extractor:
     def __init__ (self):
@@ -21,7 +22,7 @@ class Extractor:
     '''
     def get_relationship (self, doc_cal):
         text = doc_cal.doc['info']['document']
-        #text = self.mark_ent (text, pos)
+        text = self.mark_ent (text, doc_cal.entities)
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
         for s in sent:
@@ -29,30 +30,51 @@ class Extractor:
         return self.graph
 
 
-
-
     def parse_sent (self, sen):
-        words = nltk.word_tokenize (sen)
+        words = self.__word_tokenize (sen)
+        print words
         tags = nltk.pos_tag (words)
-        tree = self.pars.parse (tags)
-        tree.draw ()
-        self.analyze_sent (tree)
+        print tags
+        #tree = self.pars.parse (tags)
+        #self.analyze_sent (tree)
 
-    '''
-    def mark_ent (self, sen, ents):
-        res = ''
-        prev = 0
-        cnt = 0
-        added = 0
-        for e in ents:
-            pos = e[0][0]
-            marker =  ' _' + str(cnt)  + '_ '
-            res += sen[prev:pos] + marker
-            prev = pos
-            cnt += 1
-        res += sen[prev:]
+
+    def mark_ent (self, text, ents):
+        base = 0
+        mark_text = str ()
+        pos = self.__get_positions (ents)
+        for p in pos:
+            mark_text += text[base : p[0]]
+            mark_text += (' %s ' % p[2])
+            base = p[0] + p[1]
+        mark_text += text[base:]
+        return mark_text
+
+
+    def __word_tokenize (self, sent):
+        r = r"\s*(http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(?:/\S*)?)\s*|\s*([^,:;\(\)!\?\+\s]+)\s*|\s*([,:;\(\)!\?\+])\s*"
+        tok = re.findall (r, sent)
+        tok = self.__flatten_toks (tok)
+        return tok
+
+    def __flatten_toks (self, tok):
+        res = list()
+        for t in tok:
+            tmp = filter (lambda x: x, t)
+            res.append (tmp[0])
         return res
-        '''
+
+
+    def __get_positions (self, ents):
+        res = list ()
+        for tmp_ent in ents:
+            tmp_lst = tmp_ent['instances']
+            tmp_pos = map (lambda x: (x['offset'], x['length'], tmp_ent['__reference']),tmp_lst)
+            res += tmp_pos
+        res.sort()
+        return res
+
+
 
     def analyze_sent (self, tree):
         orig = list ()
