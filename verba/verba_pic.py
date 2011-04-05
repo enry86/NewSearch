@@ -41,7 +41,7 @@ class Verba_Pickle:
     def analyze_docs (self):
         for i, d in self.docs:
             graph = self.ext.get_relationship (d)
-            graph.output_graph ('test_doc.gv')
+            graph.output_graph (i)
 
 
 def read_opts (argv):

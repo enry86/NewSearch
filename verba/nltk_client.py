@@ -13,20 +13,7 @@ class Extractor:
                 VP: {<TO>?<MD>*<VB|VB[A-Z]>+<JJ>?}
                 S: {<S><CC><S>|<NP>*<VP><NP>*}
                 """
-        '''
-        self.gram = nltk.parse_cfg ("""
-                S -> NP VP
-                PP -> P NP
-                NP -> Det N | Det N PP
-                VP -> V NP | VP PP
-                Det -> 'DT'
-                N -> 'NN'
-                V -> 'VBZ'
-                P -> 'PP'
-                """)
-        '''
         self.pars = nltk.RegexpParser(self.gram)
-        #self.pars = nltk.ChartParser (self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
         self.graph = graphviz_out.Graph()
 
@@ -40,7 +27,6 @@ class Extractor:
         text = nltk.clean_html (text)
         sent = self.s_tok.tokenize(text)
         for i, s in enumerate (sent):
-            print 'NEW SENTENCE \n\n', s
             self.parse_sent (s, i)
         return self.graph
 
@@ -95,20 +81,22 @@ class Extractor:
         verb = str ()
         res = list ()
         for t in tree:
-            print 'TREE\n\n', t
             if type (t) != tuple:
                 if t.node == 'S':
                     res += (self.analyze_sent (t))
                 elif t.node == 'NP':
-                    np.append (self.read_tree (t))
+                    np_tmp = self.read_tree (t)
+                    if np_tmp:
+                        np.append (np_tmp)
                 elif t.node == 'VP':
                     verb = (self.read_tree (t))
-        res.append ((verb, np))
+        if verb or np:
+            res.append ((verb, np))
         return res
 
 
     def read_tree (self, tree):
-        res = ''
+        res = str ()
         for w in tree:
             res += w[0] + ' '
         return res
@@ -116,9 +104,15 @@ class Extractor:
 
     def update_graph (self, s_gr, s_id):
         verbs = list ()
-        for v,np in s_gr:
-            n = ', '.join (np)
-            self.graph.add_node (n)
-            self.graph.add_verb (v)
-            #self.graph.add_arch (v,n)
-            #self.graph.add_arch (s_id, v)
+        graph_v = str ()
+        graph_s = self.graph.add_sent (s_id)
+        for v, np in s_gr:
+            if v:
+                graph_v = self.graph.add_verb (v)
+            if graph_v:
+                self.graph.add_arch ((graph_s, graph_v))
+            for n in np:
+                n = n.replace ('"', "'")
+                graph_n = self.graph.add_node (n)
+                if graph_v:
+                    self.graph.add_arch ((graph_v, graph_n))
