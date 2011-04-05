@@ -24,8 +24,8 @@ class Graph:
     def add_arch (self, arch):
         self.archs.append (arch)
 
-    def output_graph (self, name):
-        of = open (name + '.gv', 'w')
+    def output_graph (self, todir, name):
+        of = open (todir + '/' + name + '.gv', 'w')
         of.write ('graph ' + name + ' {\n')
         self.write_nodes (of, 'sent_', self.sents)
         self.write_nodes (of, 'node_', self.nodes)

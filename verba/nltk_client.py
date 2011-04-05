@@ -15,13 +15,14 @@ class Extractor:
                 """
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
-        self.graph = graphviz_out.Graph()
+
 
 
     '''
     It works, really...
     '''
     def get_relationship (self, doc_cal):
+        self.graph = graphviz_out.Graph()
         text = doc_cal.doc['info']['document']
         text = self.mark_ent (text, doc_cal.entities)
         text = nltk.clean_html (text)
@@ -108,6 +109,7 @@ class Extractor:
         graph_s = self.graph.add_sent (s_id)
         for v, np in s_gr:
             if v:
+                v = v.replace ('"', "'")
                 graph_v = self.graph.add_verb (v)
             if graph_v:
                 self.graph.add_arch ((graph_s, graph_v))
