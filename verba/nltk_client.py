@@ -68,7 +68,6 @@ class Extractor:
     def __insert_ent (self, ocid, kws):
         self.db.insert_ent ((ocid,))
         nsid = self.db.lookup_ent ((ocid,))
-        print kws
         self.db.insert_kws ((nsid, kws,))
 
 
