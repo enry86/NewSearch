@@ -3,10 +3,10 @@
 import nltk
 import graphviz_out
 import re
+import utils.database
 
 class Extractor:
-    def __init__ (self):
-
+    def __init__ (self, conf):
         self.gram = r"""
                 NP: {<.*>+}
                 }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{
@@ -28,6 +28,7 @@ class Extractor:
                           'they','this','tis','to','too','twas','us','wants','was','we',\
                           'were','what','when','where','which','while','who','whom','why',\
                           'will','with','would','yet','you','your',"'s",',']
+        self.db = utils.database.DataBase (conf['db_file'])
 
 
     '''
@@ -57,11 +58,18 @@ class Extractor:
         mark_text = str ()
         pos = self.__get_positions (ents)
         for p in pos:
+            self.__insert_ent (p[2], p[3])
             mark_text += text[base : p[0]]
             mark_text += (' %s ' % p[2])
             base = p[0] + p[1]
         mark_text += text[base:]
         return mark_text
+
+    def __insert_ent (self, ocid, kws):
+        self.db.insert_ent ((ocid,))
+        nsid = self.db.lookup_ent ((ocid,))
+        print kws
+        self.db.insert_kws ((nsid, kws,))
 
 
     def __word_tokenize (self, sent):
@@ -82,7 +90,7 @@ class Extractor:
         res = list ()
         for tmp_ent in ents:
             tmp_lst = tmp_ent['instances']
-            tmp_pos = map (lambda x: (x['offset'], x['length'], tmp_ent['__reference']),tmp_lst)
+            tmp_pos = map (lambda x: (x['offset'], x['length'], tmp_ent['__reference'], x['exact']),tmp_lst)
             res += tmp_pos
         res.sort()
         return res
@@ -110,9 +118,19 @@ class Extractor:
 
     def read_tree (self, tree):
         res = list ()
+        tmp = str ()
         for w in tree:
             if not w[0].lower () in self.stopw:
-                res.append (w[0])
+                if w[0].startswith ('http://d.opencalais.com'):
+                    if tmp:
+                        res.append (tmp.strip ())
+                    tmp = self.db.lookup_ent ((w[0],))
+                    res.append (str (tmp))
+                    tmp = str ()
+                else:
+                    tmp += '%s ' % w[0]
+        if tmp:
+            res.append (tmp)
         return res
 
 
@@ -127,7 +145,8 @@ class Extractor:
             if graph_v:
                 self.graph.add_arch ((graph_s, graph_v))
             for n in np:
-                n = n.replace ('"', "'")
+                if type (n) != int:
+                    n = n.replace ('"', "'")
                 graph_n = self.graph.add_node (n)
                 if graph_v:
                     self.graph.add_arch ((graph_v, graph_n))

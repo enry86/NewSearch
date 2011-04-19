@@ -26,7 +26,7 @@ class Verba_Pickle:
         self.conf = conf
         fnames = os.listdir (conf['in_dir'])
         self.docs = self.__read_files (fnames)
-        self.ext = nltk_client.Extractor ()
+        self.ext = nltk_client.Extractor (conf)
 
     def __read_files (self, fnames):
         res = list ()
@@ -59,8 +59,9 @@ def read_opts (argv):
     res['out_dir'] = 'test_out'
     res['in_dir'] = 'test_in'
     res['graph_dir'] = 'test_graph'
+    res['db_file'] = 'entities.db'
     try:
-        opts, args = getopt.gnu_getopt(argv, 'i:o:g:h')
+        opts, args = getopt.gnu_getopt(argv, 'i:o:g:d:h')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -74,6 +75,8 @@ def read_opts (argv):
             res['out_dir'] = v
         elif o == '-g':
             res['graph_dir'] = v
+        elif o == '-d':
+            res['db_file'] = v
     return res
 
 
