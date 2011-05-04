@@ -47,7 +47,7 @@ class Verba_Pickle:
         tot = len (self.docs)
         cnt = 1
         for i, d in self.docs:
-            graph = self.ext.get_relationship (d)
+            graph = self.ext.get_relationship (d, i)
             self.__dump_graph (graph, i)
             graph.output_graph (self.conf['graph_dir'], i)
             print "Processed document %d out of %d" % (cnt, tot)

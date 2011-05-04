@@ -5,6 +5,8 @@ import graphviz_out
 import re
 import utils.database
 
+
+
 class Extractor:
     def __init__ (self, conf):
         self.gram = r"""
@@ -28,14 +30,16 @@ class Extractor:
                           'they','this','tis','to','too','twas','us','wants','was','we',\
                           'were','what','when','where','which','while','who','whom','why',\
                           'will','with','would','yet','you','your',"'s",',']
-        self.db = utils.database.DataBase (conf['db_file'])
+        self.db = utils.database.DataBaseMysql ()
 
 
     '''
     It works, really...
     '''
-    def get_relationship (self, doc_cal):
+    def get_relationship (self, doc_cal, docid):
+        res = None
         self.graph = graphviz_out.Graph()
+        self.docid = docid
         text = doc_cal.doc['info']['document']
         text = self.mark_ent (text, doc_cal.entities)
         text = nltk.clean_html (text)
@@ -43,6 +47,7 @@ class Extractor:
         for i, s in enumerate (sent):
             self.parse_sent (s, i)
         return self.graph
+
 
 
     def parse_sent (self, sen, i):
@@ -58,7 +63,9 @@ class Extractor:
         mark_text = str ()
         pos = self.__get_positions (ents)
         for p in pos:
-            self.__insert_ent (p[2], p[3])
+            res = self.__insert_ent (p[2], p[3])
+            if not res:
+                raise utils.database.DbError
             mark_text += text[base : p[0]]
             mark_text += (' %s ' % p[2])
             base = p[0] + p[1]
@@ -66,9 +73,15 @@ class Extractor:
         return mark_text
 
     def __insert_ent (self, ocid, kws):
-        self.db.insert_ent ((ocid,))
-        nsid = self.db.lookup_ent ((ocid,))
-        self.db.insert_kws ((nsid, kws,))
+        res = self.db.insert_ent ((ocid,))
+        if res:
+            nsid = self.db.lookup_ent ((ocid,))
+            if not kws.lower () in self.stopw:
+                pass
+                #self.db.insert_kws ((nsid, kws.lower(), self.docid,))
+        else:
+            res = False
+        return res
 
 
     def __word_tokenize (self, sent):
@@ -124,7 +137,7 @@ class Extractor:
                     if tmp:
                         res.append (tmp.strip ())
                     tmp = self.db.lookup_ent ((w[0],))
-                    res.append (str (tmp))
+                    res.append ('_nsid' + str (tmp))
                     tmp = str ()
                 else:
                     tmp += '%s ' % w[0]
@@ -138,14 +151,29 @@ class Extractor:
         graph_v = str ()
         graph_s = self.graph.add_sent (s_id)
         for v, np in s_gr:
-            if v:
-                v = v.replace ('"', "'")
-                graph_v = self.graph.add_verb (v)
-            if graph_v:
-                self.graph.add_arch ((graph_s, graph_v))
-            for n in np:
-                if type (n) != int:
+            if v and len (np):
+                bigr = self.__get_bigrams (np)
+                for b in bigr:
+                    self.db.insert_tri ((b[0], v, b[1], self.docid))
+                    '''
+                    if v:
+                    v = v.replace ('"', "'")
+                    graph_v = self.graph.add_verb (v)
+                    if graph_v:
+                    self.graph.add_arch ((graph_s, graph_v))
+                    for n in np:
+                    if type (n) != int:
                     n = n.replace ('"', "'")
-                graph_n = self.graph.add_node (n)
-                if graph_v:
+                    graph_n = self.graph.add_node (n)
+                    if graph_v:
                     self.graph.add_arch ((graph_v, graph_n))
+                    '''
+
+    def __get_bigrams (self, np):
+        res = list ()
+        for i in range (len (np)):
+            if i < len (np) - 1:
+                res.append ((np[i], np[i + 1]))
+            else:
+                res.append ((np[i], None))
+        return res
