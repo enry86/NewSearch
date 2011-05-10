@@ -6,7 +6,7 @@ import nltk
 
 class QueryAnalyzer:
     def __init__ (self):
-        pass
+        self.db = utils.database.DataBaseMysql ()
 
     def analyze (self, q):
         res = list ()
@@ -21,6 +21,7 @@ class QueryAnalyzer:
         ws = sq.split ()
         ps = nltk.pos_tag (ws)
         vs, ns = self.__isolate_verbs (ps)
+        self.__get_entities (ns)
         bigr = self.__get_bigrams (ns)
         if not vs:
             vs = ['*']
@@ -29,6 +30,11 @@ class QueryAnalyzer:
                 res.append ((b[0], v, b[1]))
         return res
 
+    def __get_entities (self, np):
+        for i, n in enumerate (np):
+            e = self.db.get_entity (n)
+            if e != None:
+                np[i] = '_nsid' + str (e)
 
     def __isolate_verbs (self, ps):
         verbs = list ()

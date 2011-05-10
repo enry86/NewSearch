@@ -69,6 +69,9 @@ class DataBaseMysql:
     __insert_tri = """insert into triples values (NULL, %s, %s, %s, %s, 1)"""
     __update_tri = """update triples set count = count + 1 where subject = %s and verb = %s and object = %s and docid = %s"""
 
+    __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
+
+
     def __init__ (self):
         self.user = mysqlsettings.MYSQL_USER
         self.passwd = mysqlsettings.MYSQL_PASSWD
@@ -126,5 +129,16 @@ class DataBaseMysql:
         if db_start:
             self.cur.execute (self.__lookup_ent, ent)
             res = self.cur.fetchone () [0]
+            self.cur.close ()
+        return res
+
+
+    def get_entity (self, kw):
+        res = None
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__query_ent, (kw, kw,))
+            res = self.cur.fetchall ()
+            print type (res)
             self.cur.close ()
         return res
