@@ -15,6 +15,7 @@ class Extractor:
                 VP: {<TO>?<MD>*<VB|VB[A-Z]>+<JJ>?}
                 S: {<S><CC><S>|<NP>*<VP><NP>*}
                 """
+        self.stm = nltk.stem.PorterStemmer ()
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
         self.stopw = ['a','able','about','across','after','all','almost','also',\
@@ -77,8 +78,7 @@ class Extractor:
         if res:
             nsid = self.db.lookup_ent ((ocid,))
             if not kws.lower () in self.stopw:
-                pass
-                #self.db.insert_kws ((nsid, kws.lower(), self.docid,))
+                self.db.insert_kws ((nsid, kws.lower(), self.docid,))
         else:
             res = False
         return res
@@ -140,7 +140,7 @@ class Extractor:
                     res.append ('_nsid' + str (tmp))
                     tmp = str ()
                 else:
-                    tmp += '%s ' % w[0]
+                    tmp += '%s ' % self.stm.stem (w[0])
         if tmp:
             res.append (tmp)
         return res

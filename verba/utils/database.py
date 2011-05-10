@@ -66,8 +66,10 @@ class DataBaseMysql:
     __lookup_ent = """select id from entities where oc_id = %s"""
     __insert_kws = """insert into keywords values (%s, %s, %s, 1)"""
     __update_kws = """update keywords set count = count + 1 where id = %s and keyword = %s and docid = %s"""
-    __insert_tri = """insert into triples values (NULL, %s, %s, %s, %s, 1)"""
-    __update_tri = """update triples set count = count + 1 where subject = %s and verb = %s and object = %s and docid = %s"""
+    __lookup_tri = """select id from triples where subject = %s and verb = %s and object = %s"""
+    __insert_tri = """insert into triples values (NULL, %s, %s, %s)"""
+    __insert_doc = """insert into docs values (%s, %s, 1)"""
+    __update_doc = """update docs set count = count + 1 where docid = %s and triple = %s"""
 
     __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
 
@@ -88,6 +90,7 @@ class DataBaseMysql:
             res = False
         return res
 
+
     def insert_ent (self, ent):
         res = self.__start_connection ()
         if res:
@@ -103,8 +106,25 @@ class DataBaseMysql:
     def insert_kws (self, kws):
         return self.__insert_dupl (self.__insert_kws, self.__update_kws, kws)
 
+
     def insert_tri (self, tri):
-        return self.__insert_dupl (self.__insert_tri, self.__update_tri, tri)
+        val_t = (tri[0], tri[1], tri[2])
+        self.__ins_tri (val_t)
+        id_t = self.lookup_tri (val_t)
+        val_d = (tri[3], id_t)
+        return self.__insert_dupl (self.__insert_doc, self.__update_doc, val_d)
+
+
+    def __ins_tri (self, tri):
+        db_s = self.__start_connection ()
+        if db_s:
+            try:
+                self.cur.execute (self.__insert_tri, tri)
+                print self.cur._executed
+                self.cur.close ()
+            except MySQLdb.IntegrityError:
+                pass
+
 
     def __insert_dupl (self, query_ins, query_upd, vals):
         res = self.__start_connection ()
@@ -122,6 +142,17 @@ class DataBaseMysql:
                     res = False
         return res
 
+    def lookup_tri (self, tri):
+        res = -1
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__lookup_tri, tri)
+            data = self.cur.fetchone ()
+            self.cur.close ()
+            if data:
+                res = data [0]
+        return res
+
 
     def lookup_ent (self, ent):
         res = -1
@@ -137,8 +168,10 @@ class DataBaseMysql:
         res = None
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.__query_ent, (kw, kw,))
-            res = self.cur.fetchall ()
-            print type (res)
+            query = self.__query_ent % (kw, kw,)
+            self.cur.execute (query)
+            scr = self.cur.fetchone ()
             self.cur.close ()
+            if scr:
+                res = int (scr [0])
         return res
