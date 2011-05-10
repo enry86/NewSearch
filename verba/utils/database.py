@@ -71,7 +71,10 @@ class DataBaseMysql:
     __insert_doc = """insert into docs values (%s, %s, 1)"""
     __update_doc = """update docs set count = count + 1 where docid = %s and triple = %s"""
     __insert_pin = """insert into pages_index values (%s, NOW())"""
-
+    __retr_docs = """select docid from pages_index order by docid asc"""
+    __retr_triples_doc = """select triple from docs where docid = %s"""
+    __retr_vect = """select docid where triple = %s order by docid asc"""
+    __retr_triples = """select triple from docs"""
 
     __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
 
@@ -195,4 +198,41 @@ class DataBaseMysql:
             self.cur.close ()
             if scr:
                 res = int (scr [0])
+        return res
+
+    def get_docs (self):
+        res = None
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__retr_docs)
+            res = self.cur.fetchall ()
+            self.cur.close ()
+        return res
+
+
+    def get_triples (self):
+        res = None
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__retr_triples)
+            res = self.cur.fetchall ()
+            self.cur.close ()
+        return res
+
+    def get_triples_doc (self, doc):
+        res = None
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.retr_triples, doc)
+            res = self.cur.fetchall ()
+            self.cut.close ()
+        return res
+
+    def get_vector (self, tri):
+        res = None
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.retr_vect, tri)
+            res = self.cur.fetchall ()
+            self.cur.close ()
         return res
