@@ -39,15 +39,20 @@ class Extractor:
     '''
     def get_relationship (self, doc_cal, docid):
         res = None
-        self.graph = graphviz_out.Graph()
-        self.docid = docid
-        text = doc_cal.doc['info']['document']
-        text = self.mark_ent (text, doc_cal.entities)
-        text = nltk.clean_html (text)
-        sent = self.s_tok.tokenize(text)
-        for i, s in enumerate (sent):
-            self.parse_sent (s, i)
-        return self.graph
+        ins = self.db.insert_pin ((docid))
+        if ins:
+            self.graph = graphviz_out.Graph()
+            self.docid = docid
+            text = doc_cal.doc['info']['document']
+            text = self.mark_ent (text, doc_cal.entities)
+            text = nltk.clean_html (text)
+            sent = self.s_tok.tokenize(text)
+            for i, s in enumerate (sent):
+                self.parse_sent (s, i)
+            res = self.graph
+        else:
+            print 'WARN: doc %s already indexed' % docid
+        return res
 
 
 

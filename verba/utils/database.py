@@ -70,6 +70,8 @@ class DataBaseMysql:
     __insert_tri = """insert into triples values (NULL, %s, %s, %s)"""
     __insert_doc = """insert into docs values (%s, %s, 1)"""
     __update_doc = """update docs set count = count + 1 where docid = %s and triple = %s"""
+    __insert_pin = """insert into pages_index values (%s, NOW())"""
+
 
     __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
 
@@ -87,6 +89,20 @@ class DataBaseMysql:
             self.con = MySQLdb.connect (user = self.user, passwd = self.passwd, host = self.host, db = self.db)
             self.cur = self.con.cursor ();
         except MySQLdb.Error:
+            res = False
+        return res
+
+    def insert_pin (self, pin):
+        res = True
+        db_start = self.__start_connection ()
+        if db_start:
+            try:
+                self.cur.execute (self.__insert_pin, pin)
+                self.con.commit ()
+                self.cur.close ()
+            except MySQLdb.IntegrityError:
+                res = False
+        else:
             res = False
         return res
 
@@ -112,7 +128,12 @@ class DataBaseMysql:
         self.__ins_tri (val_t)
         id_t = self.lookup_tri (val_t)
         val_d = (tri[3], id_t)
-        return self.__insert_dupl (self.__insert_doc, self.__update_doc, val_d)
+        if val_d >= 0:
+            res = self.__insert_dupl (self.__insert_doc, self.__update_doc, val_d)
+        else:
+            print 'ERROR: Cannot store triple'
+            res = False
+        return res
 
 
     def __ins_tri (self, tri):
@@ -120,7 +141,7 @@ class DataBaseMysql:
         if db_s:
             try:
                 self.cur.execute (self.__insert_tri, tri)
-                print self.cur._executed
+                self.con.commit ()
                 self.cur.close ()
             except MySQLdb.IntegrityError:
                 pass
