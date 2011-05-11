@@ -5,9 +5,6 @@ import MySQLdb
 
 import mysqlsettings
 
-class DbError (Exception):
-    pass
-
 
 class DataBaseSqlite:
     __insert_ent = 'insert into entities values (NULL, ?)'
