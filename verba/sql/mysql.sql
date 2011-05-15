@@ -85,7 +85,7 @@ DROP TABLE IF EXISTS `enrico`.`pages_index` ;
 
 CREATE  TABLE IF NOT EXISTS `enrico`.`pages_index` (
   `docid` VARCHAR(45) NOT NULL ,
-  `ind_date` DATE NOT NULL ,
+  `ind_date` DATETIME NOT NULL ,
   PRIMARY KEY (`docid`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;

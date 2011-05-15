@@ -23,19 +23,25 @@ class DataBase:
             res = False
         return res
 
-    def insert_ent (self, values):
+    def insert_page (self, values):
+        self.db_sem.acquire ()
         db_start = self.__start_connection ()
         if db_start:
             self.con.execute (self.__insert_page, values)
             self.con.commit ()
             self.con.close ()
+        self.db_sem.release ()
         return db_start
-
-    def lookup_ent (self, page):
+    
+    def lookup_page (self, page):
         count = 0
+        self.db_sem.acquire ()
         db_start = self.__start_connection()
         if db_start:
             res = self.con.execute(self.__lookup_page, page)
             count = res.fetchone()[0]
             self.con.close()
+        self.db_sem.release ()
         return count
+            
+
