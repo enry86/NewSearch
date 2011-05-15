@@ -145,10 +145,29 @@ class Extractor:
                     res.append ('_nsid' + str (tmp))
                     tmp = str ()
                 else:
-                    tmp += '%s ' % self.stm.stem (w[0])
+                    wrd = w[0].strip ()
+                    wrd = wrd.lower ()
+                    wrd = self.__clean_word (wrd)
+                    if wrd and not wrd.startswith ('&'):
+                        tmp += '%s ' % self.stm.stem (wrd)
         if tmp:
             res.append (tmp)
         return res
+
+
+    def __clean_word (self, w):
+        chars = """!,;:'"#\/()*"""
+        for c in chars:
+            w = w.replace (c, '')
+        if w.startswith ('.'):
+            w = w[1:]
+        if w.endswith ('.'):
+            w = w[:-1]
+        w = w.replace ('...', '')
+        w = w.replace ('-', ' ')
+        w = re.sub ('\s+', ' ', w)
+        w = w.strip ()
+        return w;
 
 
     def update_graph (self, s_gr, s_id):
@@ -180,5 +199,5 @@ class Extractor:
             if i < len (np) - 1:
                 res.append ((np[i], np[i + 1]))
             else:
-                res.append ((np[i], None))
+                res.append ((np[i], '__NONE'))
         return res

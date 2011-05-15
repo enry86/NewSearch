@@ -10,8 +10,8 @@ Options:
     -p  proxy configuration (host:port)
     -s  maximum number of sockets used (default 100)
     -d  pages directory
-    -o  database file 
-    -c  refresh cycle period
+    -o  database file
+    -c  refresh cycle period (minutes)
     -a  forces asyncronous mode (buggy)
     -h  prints this help
 '''
@@ -28,7 +28,7 @@ import feedman
 import utils.database
 
 class Manager:
-    
+
     def __init__(self, conf, pool, f_man, smith):
         self.pg_saved = 0
         self.conf = conf
@@ -38,7 +38,7 @@ class Manager:
         self.quit = False
         self.init_dirs()
 
-    
+
     def init_dirs(self):
         try:
             os.mkdir(self.conf['pag_dir'])
@@ -48,7 +48,7 @@ class Manager:
     def quit_com(self):
         self.quit = True
 
-    
+
     def status(self):
         print 'Articles retrieved:', self.f_man.articles
         print 'Pages saved:', self.pg_saved
@@ -67,8 +67,8 @@ class Manager:
                 self.status()
             elif s == 'r':
                 self.smith.refresh_feeds ()
-            
-    
+
+
     def start_cons(self):
         thr = threading.Thread(target = self.console)
         thr.start()
@@ -128,7 +128,7 @@ class Smith:
         return res
 
 
-    def get_host_path (self, url):    
+    def get_host_path (self, url):
         url = url.replace('http://', '')
         i = url.find('/')
         if i != -1:
@@ -235,7 +235,7 @@ class Smith:
             self.f_man.items[data[1]] = (v, 'retry')
             self.f_man.u_sem.release()
         self.f_man.items_proc.pop(data[1])
-    
+
     def __is_redir (self, header):
         errors = [301, 302, 303, 304, 305, 306, 307]
         res = false
@@ -319,5 +319,3 @@ def main ():
 
 if __name__ == '__main__':
     main()
-
-
