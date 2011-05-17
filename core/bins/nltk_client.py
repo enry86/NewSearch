@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import nltk
-import graphviz_out
 import re
+
+import utils.graphviz_out
 import utils.database
 
 

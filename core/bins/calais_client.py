@@ -20,13 +20,10 @@ import getopt
 import pickle
 
 class CalaisClient:
-    def __init__ (self, conf):
+    def __init__ (self, conf, files):
         self.conf = conf
-        try:
-            self.files = os.listdir(conf['repo'])
-        except OSError:
-            print 'ERR: Invalid path repo'
-            sys.exit(3)
+        self.files = files
+
         self.calais = calais.Calais(conf['key'], submitter='NewSearch')
         self.calais.processing_directives['omitOutputtingOriginalText'] = 'false'
         self.calais.processing_directives['contentType'] = conf['type']
@@ -73,7 +70,13 @@ class CalaisClient:
 
 def main ():
     conf = read_opts(sys.argv)
-    cli = CalaisClient (conf)
+    files = list ()
+    try:
+        files = os.listdir(conf['repo'])
+    except OSError:
+        print 'ERR: Invalid path repo'
+        sys.exit(3)
+    cli = CalaisClient (conf, files)
     cli.call_srv ()
 
 def read_opts (argv):
