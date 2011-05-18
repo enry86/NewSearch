@@ -46,9 +46,9 @@ class CalaisClient:
         f.close()
 
 
-    def move_file (self, s_dir, d_dir, fname):
-        os.rename(s_dir + '/' + fname, d_dir + '/' + fname)
-
+    def __get_filename (self, f):
+        res = f.split ('/') [-1]
+        return res
 
     def call_srv (self):
         try:
@@ -58,11 +58,11 @@ class CalaisClient:
             pass
         for i,f in enumerate(self.files):
             try:
-                cont = self.read_file (self.conf['repo'] + '/' + f)
+                cont = self.read_file (f)
                 res = self.calais.analyze (cont, content_type = \
                                                self.conf['type'], external_id = f)
-                self.write_file(self.conf['res'] + '/' + f[:-4] + 'pickle', res)
-                self.move_file(self.conf['repo'], self.conf['read'], f)
+                fname = self.__get_filename (f)
+                self.write_file(self.conf['res'] + '/' + fname[:-4] + 'pickle', res)
                 print 'saved file %d out of %d' % (i, len(self.files))
             except ValueError:
                 print 'Error on file %s' % f
@@ -70,12 +70,7 @@ class CalaisClient:
 
 def main ():
     conf = read_opts(sys.argv)
-    files = list ()
-    try:
-        files = os.listdir(conf['repo'])
-    except OSError:
-        print 'ERR: Invalid path repo'
-        sys.exit(3)
+    files = sys.argv[1:]
     cli = CalaisClient (conf, files)
     cli.call_srv ()
 

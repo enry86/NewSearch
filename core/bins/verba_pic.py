@@ -51,6 +51,7 @@ class Verba_Pickle:
             if graph:
                 self.__dump_graph (graph, i)
                 graph.output_graph (self.conf['graph_dir'], i)
+            os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
             print "Processed document %d out of %d" % (cnt, tot)
             cnt += 1
 

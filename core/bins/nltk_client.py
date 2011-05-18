@@ -3,7 +3,7 @@
 import nltk
 import re
 
-import utils.graphviz_out
+import utils.graphviz_out as graphviz_out
 import utils.database
 
 
