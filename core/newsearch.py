@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import sys
+sys.path.append ('lib')
+
 from bins import verba_pic
 from bins import calais_client
 
