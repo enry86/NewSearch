@@ -13,12 +13,17 @@ class DataBaseMysql:
     __insert_doc = """insert into docs values (%s, %s, 1)"""
     __update_doc = """update docs set count = count + 1 where docid = %s and triple = %s"""
     __insert_pin = """insert into pages_index values (%s, NOW())"""
-    __retr_docs = """select docid from pages_index order by docid asc"""
     __retr_triples_doc = """select triple from docs where docid = %s"""
-    __retr_vect = """select docid where triple = %s order by docid asc"""
-    __retr_triples = """select triple from docs"""
+
+    __retr_sim_tri = """insert into tmp_score (select %s, rel.triple, rel.tot / total.cnt as score from \
+(select triple, count(docid) as tot from docs where docid in \
+(select distinct docid from docs where triple = %s) and docid != %s group by triple having tot > 1) as rel, \
+(select count(*) as cnt from (select distinct docid from docs) as d) as total)"""
+
 
     __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
+
+    __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(5,4))"""
 
 
     def __init__ (self):
@@ -152,15 +157,6 @@ class DataBaseMysql:
         return res
 
 
-    def get_triples (self):
-        res = None
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__retr_triples)
-            res = self.cur.fetchall ()
-            self.cur.close ()
-        return res
-
     def get_triples_doc (self, doc):
         res = None
         db_start = self.__start_connection ()
@@ -170,11 +166,20 @@ class DataBaseMysql:
             self.cut.close ()
         return res
 
-    def get_vector (self, tri):
-        res = None
+
+    def store_scores (self, doc, tri, param):
+        res = True
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.retr_vect, tri)
-            res = self.cur.fetchall ()
+            self.cur.execute (self.__create_tmp)
+            self.con.commit ()
+            for t in tri:
+                val = (tri, tri, doc,)
+                self.cur.execute (self.__retr_sim_tri, val)
+            self.con.commit ()
+            self.__store_best (param)
             self.cur.close ()
+            res = True
         return res
+
+    def __store_best (self, param):
