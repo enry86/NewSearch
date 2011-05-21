@@ -180,9 +180,9 @@ class DataBaseMysql:
         res = False
         db_start = self.__start_connection ()
         if db_start:
+            print 'Expandind doc %s with %d triples' % (doc, size)
             self.cur.execute (self.__create_tmp)
             self.con.commit ()
-            print 'Expanding triples...'
             for t in tri:
                 val = (t[0], t[0], doc, t[0])
                 self.cur.execute (self.__retr_sim_tri, val)
@@ -193,7 +193,6 @@ class DataBaseMysql:
         return res
 
     def __store_best (self, size, doc, triples):
-        print 'Expandind doc %s with %d triples' % (doc, size)
         self.cur.execute (self.__get_rnk_tri, (doc,))
         res = self.cur.fetchall ()
         cnt = 0
@@ -203,11 +202,11 @@ class DataBaseMysql:
             scr = res[cnt][1]
             if not (tri) in triples:
                 queries.append ((doc, tri, scr,))
-                print 'Append triple %d, %f' % (tri, scr)
                 cnt += 1
-            else:
-                print 'Triple %d, %f already in the doc' % (tri, scr)
-        self.cur.executemany (self.__store_exp, queries)
+        try:
+            self.cur.executemany (self.__store_exp, queries)
+        except MySQLdb.IntegrityError:
+            print 'Document %s already expanded' % doc
         self.con.commit ()
 
     def __lu_tri_doc (self, val):

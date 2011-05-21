@@ -12,7 +12,7 @@ class ExpandDocs:
     def start_exp (self):
         docs = self.db.get_docs ()
         for d, in docs:
-            self.expand_doc (d[0])
+            self.expand_doc (d)
 
     def expand_doc (self, d):
         tr_d = self.db.get_triples_doc ((d))
