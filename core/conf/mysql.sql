@@ -8,8 +8,6 @@ USE `enrico` ;
 -- -----------------------------------------------------
 -- Table `enrico`.`triples`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`triples` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`triples` (
   `id` INT(11) NOT NULL AUTO_INCREMENT ,
   `subject` VARCHAR(200) NULL DEFAULT NULL ,
@@ -25,8 +23,6 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 -- Table `enrico`.`docs`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`docs` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`docs` (
   `docid` VARCHAR(45) NOT NULL ,
   `triple` INT(11) NOT NULL ,
@@ -45,8 +41,6 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 -- Table `enrico`.`entities`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`entities` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`entities` (
   `id` INT(11) NOT NULL AUTO_INCREMENT ,
   `oc_id` VARCHAR(200) NOT NULL ,
@@ -60,8 +54,6 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 -- Table `enrico`.`keywords`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`keywords` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`keywords` (
   `id` INT(11) NOT NULL ,
   `keyword` VARCHAR(200) NOT NULL ,
@@ -81,8 +73,6 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 -- Table `enrico`.`pages_index`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`pages_index` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`pages_index` (
   `docid` VARCHAR(45) NOT NULL ,
   `ind_date` DATETIME NOT NULL ,
@@ -94,14 +84,11 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 -- Table `enrico`.`expansion`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `enrico`.`expansion` ;
-
 CREATE  TABLE IF NOT EXISTS `enrico`.`expansion` (
   `docid` VARCHAR(50) NOT NULL ,
   `triple` INT NOT NULL ,
-  `doc_from` VARCHAR(50) NOT NULL ,
-  `score` DECIMAL(5,4)  NULL ,
-  PRIMARY KEY (`docid`, `triple`, `doc_from`) ,
+  `score` DECIMAL(11,10)  NULL ,
+  PRIMARY KEY (`docid`, `triple`) ,
   INDEX `fk_expansion_triples1` (`triple` ASC) ,
   CONSTRAINT `fk_expansion_triples1`
     FOREIGN KEY (`triple` )

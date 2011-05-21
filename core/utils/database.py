@@ -15,15 +15,24 @@ class DataBaseMysql:
     __insert_pin = """insert into pages_index values (%s, NOW())"""
     __retr_triples_doc = """select triple from docs where docid = %s"""
 
-    __retr_sim_tri = """insert into tmp_score (select %s, rel.triple, rel.tot / total.cnt as score from \
+    __get_docids = """select distinct docid from docs"""
+
+    __retr_sim_tri = """insert into tmp_score (select %s, rel.triple, TRUNCATE(rel.tot / total.cnt, 10) as score from \
 (select triple, count(docid) as tot from docs where docid in \
 (select distinct docid from docs where triple = %s) and docid != %s group by triple having tot > 1) as rel, \
-(select count(*) as cnt from (select distinct docid from docs) as d) as total)"""
+(select count(*) as cnt from (select distinct docid from docs) as d) as total where rel.triple != %s)"""
 
+    #using 1 instead of count(t1.tri_or) to avoid out of scale scores due to highly overlapping related document sets
+    __get_rnk_tri = """select t1.tri_ds, TRUNCATE(sum(t1.score) * (1 / t.tot), 10) as score  from tmp_score as t1, \
+(select count(triple) as tot, docid from docs where  docid = %s) as t group by t1.tri_ds order by score desc"""
+
+
+    __store_exp = """insert into expansion values (%s, %s, %s)"""
+    __lookup_tri_doc = """select count(*) from docs where triple = %s and docid = %s"""
 
     __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
 
-    __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(5,4))"""
+    __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(11,10))"""
 
 
     def __init__ (self):
@@ -148,38 +157,65 @@ class DataBaseMysql:
         return res
 
     def get_docs (self):
-        res = None
+        res = list ()
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.__retr_docs)
+            self.cur.execute (self.__get_docids)
             res = self.cur.fetchall ()
-            self.cur.close ()
+            self.con.close ()
         return res
 
 
     def get_triples_doc (self, doc):
-        res = None
+        res = list ()
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.retr_triples, doc)
+            self.cur.execute (self.__retr_triples_doc, doc)
             res = self.cur.fetchall ()
-            self.cut.close ()
+            self.cur.close ()
         return res
 
 
-    def store_scores (self, doc, tri, param):
-        res = True
+    def store_scores (self, doc, tri, size):
+        res = False
         db_start = self.__start_connection ()
         if db_start:
             self.cur.execute (self.__create_tmp)
             self.con.commit ()
+            print 'Expanding triples...'
             for t in tri:
-                val = (tri, tri, doc,)
+                val = (t[0], t[0], doc, t[0])
                 self.cur.execute (self.__retr_sim_tri, val)
             self.con.commit ()
-            self.__store_best (param)
+            self.__store_best (size, doc, tri)
             self.cur.close ()
             res = True
         return res
 
-    def __store_best (self, param):
+    def __store_best (self, size, doc, triples):
+        print 'Expandind doc %s with %d triples' % (doc, size)
+        self.cur.execute (self.__get_rnk_tri, (doc,))
+        res = self.cur.fetchall ()
+        cnt = 0
+        queries = list ()
+        while cnt < len(res) and cnt < size:
+            tri = res[cnt][0]
+            scr = res[cnt][1]
+            if not (tri) in triples:
+                queries.append ((doc, tri, scr,))
+                print 'Append triple %d, %f' % (tri, scr)
+                cnt += 1
+            else:
+                print 'Triple %d, %f already in the doc' % (tri, scr)
+        self.cur.executemany (self.__store_exp, queries)
+        self.con.commit ()
+
+    def __lu_tri_doc (self, val):
+        res = 0
+        self.cur.execute (self.__lookup_tri_doc, val)
+        tmp = self.cur.fetchone ()
+        try:
+            res = tmp[0]
+        except TypeError:
+            res = False
+        return res

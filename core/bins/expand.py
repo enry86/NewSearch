@@ -1,21 +1,23 @@
 #!/usr/bin/python
 
-import database
+import utils.database
 
 
 class ExpandDocs:
+    __PARAM = 0.50
 
     def __init__ (self):
-        self.db = database.DataBaseMysql ()
+        self.db = utils.database.DataBaseMysql ()
 
     def start_exp (self):
         docs = self.db.get_docs ()
-        tris = self.db.get_triples ()
         for d, in docs:
-            self.expand_doc (d, docs, tris)
+            self.expand_doc (d[0])
 
-    def expand_doc (self, d, docs, tris):
-        tr_d = self.db.get_triples ((d))
+    def expand_doc (self, d):
+        tr_d = self.db.get_triples_doc ((d))
+        size = int (len (tr_d) * self.__PARAM)
+        self.db.store_scores (d, tr_d, size)
 
 
 def main ():
