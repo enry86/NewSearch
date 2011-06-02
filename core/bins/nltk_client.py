@@ -157,12 +157,13 @@ class Extractor:
 
 
     def __clean_word (self, w):
-        chars = """!,;:'"#\/()*"""
+        chars = """!,;:'"#\/()*_|"""
         for c in chars:
             w = w.replace (c, '')
-        if w.startswith ('.'):
+        w = w.strip ()
+        while w.startswith ('.'):
             w = w[1:]
-        if w.endswith ('.'):
+        while w.endswith ('.'):
             w = w[:-1]
         w = w.replace ('...', '')
         w = w.replace ('-', ' ')
