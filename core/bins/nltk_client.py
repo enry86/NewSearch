@@ -33,7 +33,7 @@ class Extractor:
                           'were','what','when','where','which','while','who','whom','why',\
                           'will','with','would','yet','you','your',"'s",',']
         self.db = utils.database.DataBaseMysql ()
-
+        self.conf = conf
 
     '''
     It works, really...
@@ -45,6 +45,8 @@ class Extractor:
             self.graph = graphviz_out.Graph()
             self.docid = docid
             text = doc_cal.doc['info']['document']
+            if self.conf['storetxt']:
+                self.__store_text (text, docid)
             text = self.mark_ent (text, doc_cal.entities)
             text = nltk.clean_html (text)
             sent = self.s_tok.tokenize(text)
@@ -171,6 +173,11 @@ class Extractor:
         w = w.strip ()
         return w;
 
+    def __store_text (self, text, docid):
+        text = nltk.clean_html (text)
+        of = open ('%s/%s.txt' % (self.conf['out_dir'], docid), 'w')
+        of.write (text)
+        of.close ()
 
     def update_graph (self, s_gr, s_id):
         verbs = list ()

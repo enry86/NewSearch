@@ -11,6 +11,6 @@ mkdir files/test_out
 mkdir files/test_graph
 
 echo "Setup DB..."
-mysql -h $DB_HOST -P $DB_PORT -u $DB_USER --password=$DB_PSWD $DB_NAME < conf/mysql.sql
+mysql -h $DB_HOST -P $DB_PORT -u $DB_USER --password=$DB_PSWD < conf/mysql.sql
 
 echo "Configuration Complete"

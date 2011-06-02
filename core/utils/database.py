@@ -60,6 +60,7 @@ class DataBaseMysql:
                 self.con.commit ()
                 self.cur.close ()
             except MySQLdb.IntegrityError, m:
+                print m
                 res = False
         else:
             res = False

@@ -17,7 +17,8 @@ calais_cnf = {
 verba_cnf = {
     'out_dir': 'files/test_out',
     'in_dir': 'files/calais_res',
-    'graph_dir': 'files/test_graph'
+    'graph_dir': 'files/test_graph',
+    'storetxt' : True
 }
 
 def main (fs):

@@ -38,10 +38,6 @@ class Verba_Pickle:
             res.append ((id, ob))
         return res
 
-    def __dump_graph (self, gr, fn):
-        fo = open (self.conf['out_dir'] + '/' + fn + '.pickle', 'w')
-        pickle.dump (gr, fo)
-        fo.close ()
 
     def analyze_docs (self):
         tot = len (self.docs)
@@ -49,7 +45,6 @@ class Verba_Pickle:
         for i, d in self.docs:
             graph = self.ext.get_relationship (d, i)
             if graph:
-                self.__dump_graph (graph, i)
                 graph.output_graph (self.conf['graph_dir'], i)
             os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
             print "Processed document %d out of %d" % (cnt, tot)
@@ -62,8 +57,9 @@ def read_opts (argv):
     res['in_dir'] = 'test_in'
     res['graph_dir'] = 'test_graph'
     res['db_file'] = 'entities.db'
+    res['storetxt'] = False
     try:
-        opts, args = getopt.gnu_getopt(argv, 'i:o:g:d:h')
+        opts, args = getopt.gnu_getopt(argv, 'i:o:g:d:sh')
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(2)
@@ -79,6 +75,8 @@ def read_opts (argv):
             res['graph_dir'] = v
         elif o == '-d':
             res['db_file'] = v
+        elif o == '-s':
+            res['storetxt'] = True
     return res
 
 

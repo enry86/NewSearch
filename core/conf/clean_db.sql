@@ -9,3 +9,4 @@ DROP TABLE IF EXISTS `enrico`.`entities` ;
 
 DROP TABLE IF EXISTS `enrico`.`pages_index` ;
 
+DROP SCHEMA IF EXISTS `enrico`;
