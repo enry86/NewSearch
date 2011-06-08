@@ -42,13 +42,19 @@ class Verba_Pickle:
     def analyze_docs (self):
         tot = len (self.docs)
         cnt = 1
+	err = False
         for i, d in self.docs:
-            graph = self.ext.get_relationship (d, i)
-            if graph:
+	    try:	
+                graph = self.ext.get_relationship (d, i)
+	    except AttributeError:
+	    	err = True
+            if graph and not err:
                 graph.output_graph (self.conf['graph_dir'], i)
-            os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
+	    if not err:		
+                os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
             print "Processed document %d out of %d" % (cnt, tot)
             cnt += 1
+	    err = False
 
 
 def read_opts (argv):

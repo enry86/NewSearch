@@ -140,7 +140,10 @@ class DataBaseMysql:
         db_start = self.__start_connection ()
         if db_start:
             self.cur.execute (self.__lookup_ent, ent)
-            res = self.cur.fetchone () [0]
+            try:
+                res = self.cur.fetchone () [0]
+            except TypeError:
+                res = -1
             self.cur.close ()
         return res
 
