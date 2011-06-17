@@ -14,7 +14,9 @@ class DataBaseMysql:
     __update_doc = """update docs set count = count + 1 where docid = %s and triple = %s"""
     __insert_pin = """insert into pages_index values (%s, NOW())"""
     __retr_triples_doc = """select triple from docs where docid = %s"""
-
+    __get_tri_doc = """select d.triple, t.subject, t.verb, t.object from docs d, triples t where t.id = d.triple and d.docid = %s"""
+    __lookup_sim = """select count(*) from doc_sim where (doc1 = %s and doc2=%s) or (doc1=%s and doc2=%s)"""
+    __insert_sim = """insert into doc_sim values (%s, %s, %s)"""
     __get_docids = """select distinct docid from docs"""
 
     __retr_sim_tri = """insert into tmp_score (select %s, rel.triple, TRUNCATE(rel.tot / total.cnt, 10) as score from \
@@ -95,6 +97,16 @@ class DataBaseMysql:
             res = False
         return res
 
+    def insert_sim (self, sim):
+        res = self.__start_connection ()
+        if res:
+            try:
+                self.cur.execute (self.__insert_sim, sim)
+                self.con.commit ()
+                self.cur.close ()
+            except MySQLdb.Error:
+                res = False
+        return res
 
     def __ins_tri (self, tri):
         db_s = self.__start_connection ()
@@ -140,6 +152,18 @@ class DataBaseMysql:
         db_start = self.__start_connection ()
         if db_start:
             self.cur.execute (self.__lookup_ent, ent)
+            try:
+                res = self.cur.fetchone () [0]
+            except TypeError:
+                res = -1
+            self.cur.close ()
+        return res
+
+    def lookup_sim (self, docs):
+        res = -1
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__lookup_sim, docs)
             try:
                 res = self.cur.fetchone () [0]
             except TypeError:

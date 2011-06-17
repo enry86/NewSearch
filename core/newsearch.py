@@ -6,6 +6,7 @@ sys.path.append ('lib')
 from bins import verba_pic
 from bins import calais_client
 from bins import expand
+from bins import relations
 
 calais_cnf = {
     'read': 'files/html_proc',
@@ -30,10 +31,14 @@ def main (fs):
     vrb = verba_pic.Verba_Pickle (verba_cnf)
     vrb.analyze_docs ()
     print 'Finish documents processing'
-    print 'Expanding documents'
-    exp = expand.ExpandDocs ()
-    exp.start_exp ()
-    print 'Finish document expansion'
+    #print 'Expanding documents'
+    #exp = expand.ExpandDocs ()
+    #exp.start_exp ()
+    #print 'Finish document expansion'
+    print 'Computing docs similarity'
+    sim = relations.CompSimilarity ()
+    sim.store_similarity ()
+    print 'Done'
 
 
 
