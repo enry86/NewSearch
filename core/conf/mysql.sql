@@ -98,6 +98,18 @@ CREATE  TABLE IF NOT EXISTS `enrico`.`expansion` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `enrico`.`doc_sim`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `enrico`.`doc_sim` (
+  `doc1` VARCHAR(50) NOT NULL ,
+  `doc2` VARCHAR(50) NOT NULL ,
+  `score` DECIMAL(12,10) NOT NULL ,
+  PRIMARY KEY (`doc1`, `doc2`) )
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

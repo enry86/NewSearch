@@ -204,6 +204,15 @@ class DataBaseMysql:
         return res
 
 
+    def get_doc_tri (self, doc):
+        res = list ()
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__get_tri_doc, doc)
+            res = self.cur.fetchall ()
+            self.cur.close ()
+        return res
+
     def store_scores (self, doc, tri, size):
         res = False
         db_start = self.__start_connection ()

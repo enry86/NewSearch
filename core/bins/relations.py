@@ -13,13 +13,13 @@ V_FACTOR = 0.10
 class CompSimilarity:
 
     def __init__ (self):
-        self.db = utils.database.DataBaseMySql ()
+        self.db = utils.database.DataBaseMysql ()
 
     def store_similarity (self):
         docs = self.db.get_docs ()
-        for d1 in docs:
-            for d2 in docs:
-                if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) > 0:
+        for d1, in docs:
+            for d2, in docs:
+                if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) == 0:
                     sim = self.__compute_sim (d1, d2)
                     self.db.insert_sim ((d1, d2, sim))
 
@@ -36,9 +36,9 @@ class CompSimilarity:
         for t1 in t_d1:
             scores[t1[ID]] = 0
             for t2 in t_d2:
-                scores[t1[ID]] += (self.__sim_triple (t1, t2) / float (len (t2)))
+                scores[t1[ID]] += (self.__sim_triple (t1, t2) / float (len (t_d2)))
         v = scores.values ()
-        return sum (v / float (len (v)))
+        return sum (v) / float (len (v))
 
 
     def __sim_triple (self, t1, t2):
@@ -56,7 +56,10 @@ class CompSimilarity:
         simn = max (sim_s1 + sim_o1, sim_s2 + sim_o2)
 
         dsv = self.__get_dst (t1[VRB], t2[VRB])
-        simv = 1 / (dsv + 1)
+        try:
+            simv = 1 / (dsv + 1)
+        except TypeError:
+            simv = 0
         res = (V_FACTOR * simv) + (N_FACTOR * simn)
         return res
 
@@ -77,10 +80,13 @@ class CompSimilarity:
             else:
                 res = None
         elif self.__is_none (s1) | self.__is_none (s2):
-            if s1 == s2:
-                res = 0
-            else:
-                res = None
+            res = None
         else:
-            res = distance.distance (s1, s2)
+            res = distance.edit_distance (s1, s2)
         return res
+
+    def __is_ent (self, s):
+        return s.startswith('_nsid')
+
+    def __is_none (self, s):
+        return s == '__NONE'
