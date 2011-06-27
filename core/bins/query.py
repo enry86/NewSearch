@@ -161,7 +161,7 @@ class QueryManager:
         l_e, l_n = self.__extr_ent (lst)
         res += l_e
         res += l_n
-        if l_n:
+        if len (l_n) > 1:
             res.append (' '.join (l_n))
         return res
 
