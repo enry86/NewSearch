@@ -71,22 +71,27 @@ class QueryParser:
             self.state = 2
 
     def end_query (self):
-        self.query.append (self.curr_q)
+        self.query.append (self.curr_q.get_query ())
 
 
-class QueryAnalyzer:
+class QueryManager:
 
     def __init__ (self):
         self.db = utils.database.DataBaseMysql ()
         self.stm = nltk.stem.PorterStemmer ()
 
-    def analyze (self, q):
+    def run_query (self, sq):
+        query = self.__analyze (sq)
+
+    def __analyze (self, q):
         res = list ()
         tok = q.split ()
         pos = nltk.pos_tag (tok)
-        print pos
-        self.__build_query (pos)
-        print res
+        qry = self.__build_query (pos)
+        qry_ent = self.__find_ent (qry)
+        query_fin = self.__refine_qry (qry_ent)
+        for q in query_fin:
+            print q
 
     '''
     def analyze (self, q):
@@ -107,10 +112,71 @@ class QueryAnalyzer:
                 prs.found_noun (w)
         prs.end_query ()
         query = prs.get_result ()
-        print query[0].get_query ()
+        return query
+
+    def __find_ent (self, qry):
+        res = list ()
+        for q in qry:
+            self.__find_ent_cmp (q[0])
+            self.__find_ent_cmp (q[2])
+            tri = (q[0], q[1], q[2])
+            res.append (tri)
+        return res
+
+    def __find_ent_cmp (self, c):
+        for i, t in enumerate (c):
+            e = self.db.get_entity (t)
+            if e != None:
+                c[i] = '_nsid' + str (e)
+            else:
+                c[i] = self.stm.stem (t)
 
 
+    def __refine_qry (self, qry):
+        res = list ()
+        for q in qry:
+            tmp_res = list ()
+            subs = self.__set_cmp (q[0])
+            objs = self.__set_cmp (q[2])
+            verb = q[1]
+            if not verb:
+                verb = '*'
+            if subs and objs:
+                for s in subs:
+                    for o in objs:
+                        tmp_res.append ((s, verb, o))
+            elif subs:
+                for k, s in enumerate (subs):
+                    tmp_res.append ((s, verb, '*'))
+                    for o in subs [k + 1:]:
+                        tmp_res.append ((s, verb, o))
 
+            if tmp_res:
+                res += tmp_res
+        return res
+
+
+    def __set_cmp (self, lst):
+        res = list ()
+        l_e, l_n = self.__extr_ent (lst)
+        res += l_e
+        res += l_n
+        if l_n:
+            res.append (' '.join (l_n))
+        return res
+
+
+    def __extr_ent (self, c):
+        ents = list ()
+        words = list ()
+        for t in c:
+            if t.startswith ('_nsid'):
+                ents.append (t)
+            else:
+                words.append (t)
+        return ents, words
+
+    '''
     def __get_triples (self, sq):
         res = list ()
         ws = sq.split ()
@@ -153,11 +219,11 @@ class QueryAnalyzer:
             else:
                 res.append ((np[i], '*'))
         return res
-
+        '''
 
 def main (q):
-    qan = QueryAnalyzer ()
-    qan.analyze (q)
+    qan = QueryManager ()
+    qan.run_query (q)
 
 
 if __name__ == '__main__':

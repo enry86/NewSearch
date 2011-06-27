@@ -3,10 +3,7 @@
 import sys
 sys.path.append ('lib')
 
-from bins import verba_pic
-from bins import calais_client
-from bins import expand
-from bins import relations
+
 
 calais_cnf = {
     'read': 'files/html_proc',
@@ -22,7 +19,12 @@ verba_cnf = {
     'storetxt' : True
 }
 
-def main (fs):
+def main_index (fs):
+    from bins import verba_pic
+    from bins import calais_client
+    from bins import expand
+    from bins import relations
+
     print 'Starting OpenCalais queries...'
     cal = calais_client.CalaisClient (calais_cnf, fs)
     cal.call_srv ()
@@ -40,8 +42,22 @@ def main (fs):
     sim.store_similarity ()
     print 'Done'
 
+def main_query (q):
+    from bins import query
+
+    qa = query.QueryManager ()
+    qa.run_query (q)
+
 
 
 if __name__ == '__main__':
-    files = sys.argv[1:]
-    main (files)
+    if sys.argv [1] == '-q':
+        try:
+            query = sys.argv[2]
+            main_query (query)
+        except KeyError:
+            print 'No query provided\n'
+            sys.exit (0)
+    else:
+        files = sys.argv[1:]
+        main_index (files)
