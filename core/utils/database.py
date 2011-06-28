@@ -40,7 +40,7 @@ class DataBaseMysql:
     __get_all_triples = """select * from triples"""
     __tmp_query_result = """create temporary table tmp_query (tri integer, score numeric(11,10))"""
     __insert_tmp_query = """insert into tmp_query values (%s, %s)"""
-    __rank_docs = """select d.docid, avg(tmp.score) as rel from docs d, tmp_query tmp where d.triple = tmp.tri group by d.docid order by rel desc"""
+    __rank_docs = """select d.docid, avg(tmp.score) as rel from docs d, tmp_query tmp where d.triple = tmp.tri group by d.docid having rel > 0 order by rel desc"""
 
 
     def __init__ (self):
