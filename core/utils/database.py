@@ -36,6 +36,12 @@ class DataBaseMysql:
 
     __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(11,10))"""
 
+    #QUERY ANSWERING
+    __get_all_triples = """select * from triples"""
+    __tmp_query_result = """create temporary table tmp_query (tri integer, score numeric(11,10))"""
+    __insert_tmp_query = """insert into tmp_query values (%s, %s)"""
+    __rank_docs = """select d.docid, avg(tmp.score) as rel from docs d, tmp_query tmp where d.triple = tmp.tri group by d.docid order by rel desc"""
+
 
     def __init__ (self):
         self.user = mysqlsettings.MYSQL_USER
@@ -65,6 +71,16 @@ class DataBaseMysql:
                 print m
                 res = False
         else:
+            res = False
+        return res
+
+    def insert_tmp_query (self, tmpq):
+        res = True
+        try:
+            self.cur.execute (self.__insert_tmp_query, tmpq)
+            self.con.commit ()
+        except MySQLdb.Error, m:
+            print m
             res = False
         return res
 
@@ -171,6 +187,17 @@ class DataBaseMysql:
             self.cur.close ()
         return res
 
+    def rank_docs_query (self):
+        res = list ()
+        try:
+            self.cur.execute (self.__rank_docs)
+            res = self.cur.fetchall ()
+            self.cur.close ()
+        except MySQLdb.Error, m:
+            print m
+            res = list ()
+        return res
+
 
     def get_entity (self, kw):
         res = None
@@ -193,6 +220,16 @@ class DataBaseMysql:
             self.con.close ()
         return res
 
+    def get_triples (self):
+        res = list ()
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (self.__get_all_triples)
+            res = self.cur.fetchall ()
+            self.cur.close ()
+        return res
+
+
 
     def get_triples_doc (self, doc):
         res = list ()
@@ -212,6 +249,19 @@ class DataBaseMysql:
             res = self.cur.fetchall ()
             self.cur.close ()
         return res
+
+    def create_tmp_query (self):
+        res = True
+        db_start = self.__start_connection ()
+        if db_start:
+            try:
+                self.cur.execute (self.__tmp_query_result)
+                self.con.commit ()
+            except MySQLdb.Error:
+                res = False
+        return res
+
+
 
     def store_scores (self, doc, tri, size):
         res = False

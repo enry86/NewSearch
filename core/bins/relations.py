@@ -23,6 +23,18 @@ class CompSimilarity:
                     sim = self.__compute_sim (d1, d2)
                     self.db.insert_sim ((d1, d2, sim))
 
+    def query_similarity (self, query):
+        tris = self.db.get_triples()
+        self.db.create_tmp_query ()
+        for t in tris:
+            tmp_s = list ()
+            for q in query:
+                sim = self.__sim_triple (q, t)
+                tmp_s.append (sim)
+            sim_max = max (tmp_s)
+            self.db.insert_tmp_query ((t[0], sim))
+        res = self.db.rank_docs_query ()
+        return res
 
 
     def __compute_sim (self, d1, d2):
@@ -44,10 +56,16 @@ class CompSimilarity:
     def __sim_triple (self, t1, t2):
         if t1[ID] == t2[ID]:
             return 1
+
         ds1 = self.__get_dst (t1[SUB], t2[SUB])
         ds2 = self.__get_dst (t1[SUB], t2[OBJ])
         do1 = self.__get_dst (t1[OBJ], t2[OBJ])
         do2 = self.__get_dst (t1[OBJ], t2[SUB])
+
+        if t1[SUB] == '*':
+            ds1 = do1
+        elif t1[OBJ] == '*':
+            ds2 = do2
 
         sim_s1 = self.__get_sim (ds1)
         sim_o1 = self.__get_sim (do1)
@@ -60,6 +78,8 @@ class CompSimilarity:
             simv = 1 / (dsv + 1)
         except TypeError:
             simv = 0
+        if t1[VRB] == '*':
+            simv = simn
         res = (V_FACTOR * simv) + (N_FACTOR * simn)
         return res
 

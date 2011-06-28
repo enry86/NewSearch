@@ -3,6 +3,7 @@
 import utils.database
 import sys
 import nltk
+from bins import relations
 
 class Query:
     def __init__ (self):
@@ -82,6 +83,10 @@ class QueryManager:
 
     def run_query (self, sq):
         query = self.__analyze (sq)
+        cs = relations.CompSimilarity ()
+        res = cs.query_similarity (query)
+        print len(res)
+        return res
 
     def __analyze (self, q):
         res = list ()
@@ -90,8 +95,7 @@ class QueryManager:
         qry = self.__build_query (pos)
         qry_ent = self.__find_ent (qry)
         query_fin = self.__refine_qry (qry_ent)
-        for q in query_fin:
-            print q
+        return query_fin
 
     '''
     def analyze (self, q):
@@ -134,6 +138,7 @@ class QueryManager:
 
     def __refine_qry (self, qry):
         res = list ()
+        id_t = '__query__'
         for q in qry:
             tmp_res = list ()
             subs = self.__set_cmp (q[0])
@@ -144,12 +149,12 @@ class QueryManager:
             if subs and objs:
                 for s in subs:
                     for o in objs:
-                        tmp_res.append ((s, verb, o))
+                        tmp_res.append ((id_t, s, verb, o))
             elif subs:
                 for k, s in enumerate (subs):
-                    tmp_res.append ((s, verb, '*'))
+                    tmp_res.append ((id_t, s, verb, '*'))
                     for o in subs [k + 1:]:
-                        tmp_res.append ((s, verb, o))
+                        tmp_res.append ((id_t, s, verb, o))
 
             if tmp_res:
                 res += tmp_res

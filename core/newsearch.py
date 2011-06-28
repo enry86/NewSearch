@@ -46,7 +46,9 @@ def main_query (q):
     from bins import query
 
     qa = query.QueryManager ()
-    qa.run_query (q)
+    res = qa.run_query (q)
+    for r in res:
+        print r
 
 
 
