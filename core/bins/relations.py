@@ -64,9 +64,11 @@ class CompSimilarity:
 
         if t1[SUB] == '*':
             ds1 = do1
+	    ds2 = do2
         elif t1[OBJ] == '*':
-            ds2 = do2
-
+	    do1 = ds1
+            do2 = ds2
+	
         sim_s1 = self.__get_sim (ds1)
         sim_o1 = self.__get_sim (do1)
         sim_s2 = self.__get_sim (ds2)
