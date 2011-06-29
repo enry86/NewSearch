@@ -42,6 +42,10 @@ class DataBaseMysql:
     __insert_tmp_query = """insert into tmp_query values (%s, %s)"""
     __rank_docs = """select d.docid, avg(tmp.score) as rel from docs d, tmp_query tmp where d.triple = tmp.tri group by d.docid having rel > 0 order by rel desc"""
 
+    #WORD COUNTING
+    __insert_cnt = """insert into word_count values (%s, %s)"""
+    __update_cnt = """update word_count set count = count + %s where word = %s"""
+
 
     def __init__ (self):
         self.user = mysqlsettings.MYSQL_USER
@@ -305,3 +309,7 @@ class DataBaseMysql:
         except TypeError:
             res = False
         return res
+
+
+    def update_wcount (self, cnt):
+        return self.__insert_dupl (self.__insert_cnt, self.__update_cnt, cnt)

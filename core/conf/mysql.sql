@@ -110,6 +110,16 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
 
+-- -----------------------------------------------------
+-- Table `enrico`.`word_count`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `enrico`.`word_count` (
+  `count` INT NOT NULL ,
+  `word` VARCHAR(200) NOT NULL ,
+  PRIMARY KEY (`word`) )
+ENGINE = InnoDB;
+
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
