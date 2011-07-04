@@ -16,7 +16,8 @@ class Extractor:
                 VP: {<TO>?<MD>*<VB|VB[A-Z]>+<JJ>?}
                 S: {<S><CC><S>|<NP>*<VP><NP>*}
                 """
-        self.stm = nltk.stem.PorterStemmer ()
+        #self.stm = nltk.stem.PorterStemmer ()
+        self.lem = nltk.stem.WordNetLemmatizer ()
         self.pars = nltk.RegexpParser(self.gram)
         self.s_tok = nltk.data.load('tokenizers/punkt/english.pickle')
         self.stopw = ['a','able','about','across','after','all','almost','also',\
@@ -156,7 +157,7 @@ class Extractor:
                     wrd = wrd.lower ()
                     wrd = self.__clean_word (wrd)
                     if wrd and not wrd.startswith ('&'):
-                        tmp += '%s ' % self.stm.stem (wrd)
+                        tmp += '%s ' % self.lem.lemmatize (wrd)
         if tmp:
             res.append (tmp)
         return res
@@ -192,19 +193,6 @@ class Extractor:
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
                     self.db.insert_tri ((b[0], v, b[1], self.docid))
-                    '''
-                    if v:
-                    v = v.replace ('"', "'")
-                    graph_v = self.graph.add_verb (v)
-                    if graph_v:
-                    self.graph.add_arch ((graph_s, graph_v))
-                    for n in np:
-                    if type (n) != int:
-                    n = n.replace ('"', "'")
-                    graph_n = self.graph.add_node (n)
-                    if graph_v:
-                    self.graph.add_arch ((graph_v, graph_n))
-                    '''
 
     def __get_bigrams (self, np):
         res = list ()
