@@ -25,6 +25,7 @@ class WordCount:
         self.db = database.DataBaseMysql ()
 
     def count (self):
+        print self.files
         for f in self.files:
             in_f = open (f)
             cont = in_f.read ()
