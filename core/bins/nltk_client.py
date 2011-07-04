@@ -48,6 +48,10 @@ class Extractor:
             if self.conf['storetxt']:
                 self.__store_text (text, docid)
             text = self.mark_ent (text, doc_cal.entities)
+	    try:
+                text = self.mark_ent (text, doc_cal.entities)
+	    except AttributeError:
+	        pass
             text = nltk.clean_html (text)
             sent = self.s_tok.tokenize(text)
             for i, s in enumerate (sent):
