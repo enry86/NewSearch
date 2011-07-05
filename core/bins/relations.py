@@ -111,7 +111,11 @@ class CompSimilarity:
         elif self.__is_none (s1) | self.__is_none (s2):
             res = None
         else:
-            res = distance.edit_distance (s1, s2)
+            #res = distance.edit_distance (s1, s2)
+            if s1 != s2:
+                res = None
+            else:
+                res = 0
         return res
 
     def __is_ent (self, s):

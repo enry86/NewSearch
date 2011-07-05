@@ -211,8 +211,10 @@ class Extractor:
                     self.triples.append ((b[0], v, b[1], self.docid))
                     #self.db.insert_tri ((b[0], v, b[1], self.docid))
 
+
     def __store_graph (self):
         self.db.insert_many_tri (self.triples)
+
 
     def __get_bigrams (self, np):
         res = list ()
