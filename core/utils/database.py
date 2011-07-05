@@ -63,81 +63,6 @@ class DataBaseMysql:
             res = False
         return res
 
-    def insert_pin (self, pin):
-        res = True
-        db_start = self.__start_connection ()
-        if db_start:
-            try:
-                self.cur.execute (self.__insert_pin, pin)
-                self.con.commit ()
-                self.cur.close ()
-            except MySQLdb.IntegrityError, m:
-                print m
-                res = False
-        else:
-            res = False
-        return res
-
-    def insert_tmp_query (self, tmpq):
-        res = True
-        try:
-            self.cur.execute (self.__insert_tmp_query, tmpq)
-            self.con.commit ()
-        except MySQLdb.Error, m:
-            print m
-            res = False
-        return res
-
-
-    def insert_ent (self, ent):
-        res = self.__start_connection ()
-        if res:
-            try:
-                self.cur.execute (self.__insert_ent, ent)
-                self.con.commit ()
-                self.cur.close ()
-            except MySQLdb.IntegrityError:
-                pass
-        return res
-
-
-    def insert_kws (self, kws):
-        return self.__insert_dupl (self.__insert_kws, self.__update_kws, kws)
-
-
-    def insert_tri (self, tri):
-        val_t = (tri[0], tri[1], tri[2])
-        self.__ins_tri (val_t)
-        id_t = self.lookup_tri (val_t)
-        val_d = (tri[3], id_t)
-        if val_d >= 0:
-            res = self.__insert_dupl (self.__insert_doc, self.__update_doc, val_d)
-        else:
-            print 'ERROR: Cannot store triple'
-            res = False
-        return res
-
-    def insert_sim (self, sim):
-        res = self.__start_connection ()
-        if res:
-            try:
-                self.cur.execute (self.__insert_sim, sim)
-                self.con.commit ()
-                self.cur.close ()
-            except MySQLdb.Error:
-                res = False
-        return res
-
-    def __ins_tri (self, tri):
-        db_s = self.__start_connection ()
-        if db_s:
-            try:
-                self.cur.execute (self.__insert_tri, tri)
-                self.con.commit ()
-                self.cur.close ()
-            except MySQLdb.IntegrityError:
-                pass
-
 
     def __insert_dupl (self, query_ins, query_upd, vals):
         res = self.__start_connection ()
@@ -155,41 +80,112 @@ class DataBaseMysql:
                     res = False
         return res
 
-    def lookup_tri (self, tri):
+    def __insert_uni (self, query, vals):
+        res = True
+        db_start = self.__start_connection ()
+        if db_start:
+            try:
+                self.cur.execute (query, vals)
+                self.con.commit ()
+                self.cur.close ()
+            except MySQLdb.IntegrityError, m:
+                print m
+                res = False
+        else:
+            res = False
+        return res
+
+    def __insert_uni_true (self, query, vals):
+        res = self.__start_connection ()
+        if res:
+            try:
+                self.cur.execute (query, vals)
+                self.con.commit ()
+                self.cur.close ()
+            except MySQLdb.IntegrityError:
+                pass
+        return res
+
+
+    def insert_ent (self, ent):
+        return self.__insert_uni_true (self.__insert_ent, ent)
+
+
+    def insert_kws (self, kws):
+        return self.__insert_dupl (self.__insert_kws, self.__update_kws, kws)
+
+
+    def insert_pin (self, pin):
+        return self.__insert_uni (self.__insert_pin, pin)
+
+
+    def insert_sim (self, sim):
+        return self.__insert_uni (self.__insert_sim, sim)
+
+
+    def insert_tmp_query (self, tmpq):
+        res = True
+        try:
+            self.cur.execute (self.__insert_tmp_query, tmpq)
+            self.con.commit ()
+        except MySQLdb.Error, m:
+            print m
+            res = False
+        return res
+
+    def insert_many_tri (self, tris):
+        for t in tris:
+            self.insert_tri (t)
+
+    def insert_tri (self, tri):
+        val_t = (tri[0], tri[1], tri[2])
+        self.__ins_tri (val_t)
+        id_t = self.lookup_tri (val_t)
+        val_d = (tri[3], id_t)
+        if val_d >= 0:
+            res = self.__insert_dupl (self.__insert_doc, self.__update_doc, val_d)
+        else:
+            print 'ERROR: Cannot store triple'
+            res = False
+        return res
+
+
+    def __ins_tri (self, tri):
+        db_s = self.__start_connection ()
+        if db_s:
+            try:
+                self.cur.execute (self.__insert_tri, tri)
+                self.con.commit ()
+                self.cur.close ()
+            except MySQLdb.IntegrityError:
+                pass
+
+
+    def __lookup_val (self, query, val):
         res = -1
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.__lookup_tri, tri)
-            data = self.cur.fetchone ()
+            self.cur.execute (query, val)
+            try:
+                res = self.cur.fetchone () [0]
+            except TypeError:
+                res = -1
             self.cur.close ()
-            if data:
-                res = data [0]
         return res
+
+
+
+    def lookup_tri (self, tri):
+        return self.__lookup_val (self.__lookup_tri, tri)
 
 
     def lookup_ent (self, ent):
-        res = -1
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__lookup_ent, ent)
-            try:
-                res = self.cur.fetchone () [0]
-            except TypeError:
-                res = -1
-            self.cur.close ()
-        return res
+        return self.__lookup_val (self.__lookup_ent, ent)
+
 
     def lookup_sim (self, docs):
-        res = -1
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__lookup_sim, docs)
-            try:
-                res = self.cur.fetchone () [0]
-            except TypeError:
-                res = -1
-            self.cur.close ()
-        return res
+        return self.__lookup_val (self.__lookup_sim, docs)
+
 
     def rank_docs_query (self):
         res = list ()
@@ -200,6 +196,16 @@ class DataBaseMysql:
         except MySQLdb.Error, m:
             print m
             res = list ()
+        return res
+
+
+    def __get_all (self, query):
+        res = list ()
+        db_start = self.__start_connection ()
+        if db_start:
+            self.cur.execute (query)
+            res = self.cur.fetchall ()
+            self.con.close ()
         return res
 
 
@@ -215,44 +221,30 @@ class DataBaseMysql:
                 res = int (scr [0])
         return res
 
-    def get_docs (self):
+    def __get_all_query (self, query, val):
         res = list ()
         db_start = self.__start_connection ()
         if db_start:
-            self.cur.execute (self.__get_docids)
-            res = self.cur.fetchall ()
-            self.con.close ()
-        return res
-
-    def get_triples (self):
-        res = list ()
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__get_all_triples)
+            self.cur.execute (query, val)
             res = self.cur.fetchall ()
             self.cur.close ()
         return res
 
+    def get_docs (self):
+        return self.__get_all (self.__get_docids)
+
+
+    def get_triples (self):
+        return self.__get_all (self.__get_all_triples)
 
 
     def get_triples_doc (self, doc):
-        res = list ()
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__retr_triples_doc, doc)
-            res = self.cur.fetchall ()
-            self.cur.close ()
-        return res
+        return self.__get_all_query (self.__retr_triples_doc, doc)
 
 
     def get_doc_tri (self, doc):
-        res = list ()
-        db_start = self.__start_connection ()
-        if db_start:
-            self.cur.execute (self.__get_tri_doc, doc)
-            res = self.cur.fetchall ()
-            self.cur.close ()
-        return res
+        return self.__get_all_query (self.__get_tri_doc, doc)
+
 
     def create_tmp_query (self):
         res = True

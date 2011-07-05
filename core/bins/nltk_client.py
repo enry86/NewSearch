@@ -36,11 +36,13 @@ class Extractor:
                           'will','with','would','yet','you','your',"'s",',']
         self.db = utils.database.DataBaseMysql ()
         self.conf = conf
+        self.triples = list ()
 
     '''
     It works, really...
     '''
     def get_relationship (self, doc_cal, docid, test):
+        self.triples = list ()
         proc = 0
         store = 0
         res = None
@@ -63,14 +65,15 @@ class Extractor:
                 print 'preprocessing %f' % (end_pre - start_pre)
             sent = self.s_tok.tokenize(text)
             for i, s in enumerate (sent):
-                p,s = self.parse_sent (s, i)
-                if test:
-                    proc += p
-                    store += s
-            res = self.graph
+                self.parse_sent (s, i)
             if test:
-                print 'processing %f' % proc
-                print 'storing %f' % store
+                end_pro = time.time ()
+                print 'processing %f' % (end_pro - end_pre)
+            self.__store_graph ()
+            if test:
+                end_sto = time.time ()
+                print 'storing %f' % (end_sto - end_pro)
+            res = self.graph
         elif not test:
             print 'WARN: doc %s already indexed' % docid
         return res
@@ -78,15 +81,11 @@ class Extractor:
 
 
     def parse_sent (self, sen, i):
-        start = time.time ()
         words = self.__word_tokenize (sen)
         tags = nltk.pos_tag (words)
         tree = self.pars.parse (tags)
         s_gr = self.analyze_sent (tree)
-        end_proc = time.time ()
         self.update_graph (s_gr, i)
-        end_stor = time.time ()
-        return (end_proc - start), (end_stor - end_proc)
 
 
     def mark_ent (self, text, ents):
@@ -209,7 +208,11 @@ class Extractor:
             if v and len (np):
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
-                    self.db.insert_tri ((b[0], v, b[1], self.docid))
+                    self.triples.append ((b[0], v, b[1], self.docid))
+                    #self.db.insert_tri ((b[0], v, b[1], self.docid))
+
+    def __store_graph (self):
+        self.db.insert_many_tri (self.triples)
 
     def __get_bigrams (self, np):
         res = list ()
