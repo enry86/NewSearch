@@ -2,6 +2,7 @@
 
 import nltk
 import re
+import time
 
 import utils.graphviz_out as graphviz_out
 import utils.database
@@ -39,8 +40,12 @@ class Extractor:
     '''
     It works, really...
     '''
-    def get_relationship (self, doc_cal, docid):
+    def get_relationship (self, doc_cal, docid, test):
+        proc = 0
+        store = 0
         res = None
+        if test:
+            start_pre = time.time ()
         ins = self.db.insert_pin ((docid))
         if ins:
             self.graph = graphviz_out.Graph()
@@ -48,28 +53,40 @@ class Extractor:
             text = doc_cal.doc['info']['document']
             if self.conf['storetxt']:
                 self.__store_text (text, docid)
-            #text = self.mark_ent (text, doc_cal.entities)
             try:
                 text = self.mark_ent (text, doc_cal.entities)
             except AttributeError:
                 pass
             text = nltk.clean_html (text)
+            if test:
+                end_pre = time.time ()
+                print 'preprocessing %f' % (end_pre - start_pre)
             sent = self.s_tok.tokenize(text)
             for i, s in enumerate (sent):
-                self.parse_sent (s, i)
+                p,s = self.parse_sent (s, i)
+                if test:
+                    proc += p
+                    store += s
             res = self.graph
-        else:
+            if test:
+                print 'processing %f' % proc
+                print 'storing %f' % store
+        elif not test:
             print 'WARN: doc %s already indexed' % docid
         return res
 
 
 
     def parse_sent (self, sen, i):
+        start = time.time ()
         words = self.__word_tokenize (sen)
         tags = nltk.pos_tag (words)
         tree = self.pars.parse (tags)
         s_gr = self.analyze_sent (tree)
+        end_proc = time.time ()
         self.update_graph (s_gr, i)
+        end_stor = time.time ()
+        return (end_proc - start), (end_stor - end_proc)
 
 
     def mark_ent (self, text, ents):

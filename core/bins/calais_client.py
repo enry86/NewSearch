@@ -18,12 +18,13 @@ import os
 import sys
 import getopt
 import pickle
+import time
 
 class CalaisClient:
     def __init__ (self, conf, files):
         self.conf = conf
         self.files = files
-
+        self.test = conf['test']
         self.calais = calais.Calais(conf['key'], submitter='NewSearch')
         self.calais.processing_directives['omitOutputtingOriginalText'] = 'false'
         self.calais.processing_directives['contentType'] = conf['type']
@@ -58,14 +59,27 @@ class CalaisClient:
             pass
         for i,f in enumerate(self.files):
             try:
+                if self.test:
+                    start = time.time ()
                 cont = self.read_file (f)
+                if self.test:
+                    end_read = time.time ()
                 res = self.calais.analyze (cont, content_type = \
                                                self.conf['type'], external_id = f)
+                if self.test:
+                    end_calais = time.time ()
                 fname = self.__get_filename (f)
                 self.write_file(self.conf['res'] + '/' + fname[:-4] + 'pickle', res)
-                print 'saved file %d out of %d' % (i, len(self.files))
+                if self.test:
+                    end_store = time.time ()
+                    print 'read %f' % (end_read - start)
+                    print 'query %f' % (end_calais - end_read)
+                    print 'pickle %f' % (end_store - end_calais)
+                else:
+                    print 'saved file %d out of %d' % (i, len(self.files))
             except ValueError:
-                print 'Error on file %s' % f
+                if not self.test:
+                    print 'Error on file %s' % f
 
 
 def main ():

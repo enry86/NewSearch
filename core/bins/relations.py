@@ -2,6 +2,7 @@
 
 import nltk.metrics.distance as distance
 import utils.database
+import time
 
 ID = 0
 SUB = 1
@@ -12,16 +13,22 @@ V_FACTOR = 0.10
 
 class CompSimilarity:
 
-    def __init__ (self):
+    def __init__ (self, test):
         self.db = utils.database.DataBaseMysql ()
+        self.test = test
 
     def store_similarity (self):
         docs = self.db.get_docs ()
         for d1, in docs:
+            if self.test:
+                start = time.time ()
             for d2, in docs:
                 if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) == 0:
                     sim = self.__compute_sim (d1, d2)
                     self.db.insert_sim ((d1, d2, sim))
+            if self.test:
+                stop = time.time ()
+                print 'relationship %f' % (stop - start)
 
     def query_similarity (self, query):
         tris = self.db.get_triples()
@@ -64,11 +71,11 @@ class CompSimilarity:
 
         if t1[SUB] == '*':
             ds1 = do1
-	    ds2 = do2
+            ds2 = do2
         elif t1[OBJ] == '*':
-	    do1 = ds1
+            do1 = ds1
             do2 = ds2
-	
+
         sim_s1 = self.__get_sim (ds1)
         sim_o1 = self.__get_sim (do1)
         sim_s2 = self.__get_sim (ds2)

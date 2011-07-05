@@ -18,43 +18,51 @@ import sys
 import os
 import getopt
 import nltk_client
-
+import time
 
 
 class Verba_Pickle:
     def __init__ (self, conf):
         self.conf = conf
+        self.test = conf['test']
         fnames = os.listdir (conf['in_dir'])
         self.docs = self.__read_files (fnames)
         self.ext = nltk_client.Extractor (conf)
 
+
     def __read_files (self, fnames):
         res = list ()
         for fn in fnames:
+            if self.test:
+                start = time.time ()
             id = fn[:fn.find('.pickle')]
             fi = open(self.conf['in_dir'] + '/' + fn)
             ob = pickle.load (fi)
             fi.close ()
             res.append ((id, ob))
+            if self.test:
+                stop = time.time ()
+                print 'importing %f' % (stop - start)
         return res
 
 
     def analyze_docs (self):
         tot = len (self.docs)
         cnt = 1
-	err = False
+        err = False
         for i, d in self.docs:
-	    try:	
-                graph = self.ext.get_relationship (d, i)
-	    except AttributeError:
-	    	err = True
+            try:
+                graph = self.ext.get_relationship (d, i, self.test)
+            except AttributeError:
+                err = True
             if graph and not err:
                 graph.output_graph (self.conf['graph_dir'], i)
-	    if not err:		
+            if not err:
                 os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
-            print "Processed document %d out of %d" % (cnt, tot)
+            if not self.test:
+                print "Processed document %d out of %d" % (cnt, tot)
             cnt += 1
-	    err = False
+            err = False
 
 
 def read_opts (argv):
