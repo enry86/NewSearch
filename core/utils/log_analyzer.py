@@ -26,6 +26,7 @@ class LogAnalyzer:
                     self.res[t[0]] += float (t[1])
                 except KeyError:
                     pass
+        log_f.close ()
 
     def print_res (self):
         imp = numpy.average (self.res['importing'])
