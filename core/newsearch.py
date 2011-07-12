@@ -4,7 +4,8 @@ import sys
 sys.path.append ('lib')
 
 newsearch_cnf = {
-    'test': False
+    'test': False,
+    'hexa_memo': True
 }
 
 calais_cnf = {
@@ -28,6 +29,7 @@ def main_index (fs):
     from bins import calais_client
     from bins import expand
     from bins import relations
+    from bins import index
 
     if not newsearch_cnf['test']:
         print 'Starting OpenCalais queries...'
@@ -40,14 +42,25 @@ def main_index (fs):
     vrb.analyze_docs ()
     if not newsearch_cnf['test']:
         print 'Finish documents processing'
+
+    ind = index.Indexer (newsearch_cnf['test'])
+    index_memo = ind.build_index ()
+    if not newsearch_cnf['test']:
+        print 'Index Built'
+
     #print 'Expanding documents'
     #exp = expand.ExpandDocs ()
     #exp.start_exp ()
     #print 'Finish document expansion'
+
     if not newsearch_cnf['test']:
         print 'Computing docs similarity'
-    sim = relations.CompSimilarity (newsearch_cnf['test'])
+    if newsearch_cnf['hexa_memo'] == True:
+        sim = index.IndexSimilarity (newsearch_cnf['test'], index_memo)
+    else:
+        sim = relations.CompSimilarity (newsearch_cnf['test'])
     sim.store_similarity ()
+
     if not newsearch_cnf['test']:
         print 'Done'
 
@@ -62,7 +75,10 @@ def main_query (q):
 
 
 if __name__ == '__main__':
-    if sys.argv [1] == '-q':
+    if len (sys.argv) == 1:
+        files = sys.argv[1:]
+        main_index (files)
+    elif sys.argv [1] == '-q':
         try:
             query = sys.argv[2]
             main_query (query)
@@ -74,7 +90,4 @@ if __name__ == '__main__':
         calais_cnf['test'] = True
         verba_cnf['test'] = True
         files = sys.argv[2:]
-        main_index (files)
-    else:
-        files = sys.argv[1:]
         main_index (files)
