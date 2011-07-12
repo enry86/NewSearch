@@ -14,7 +14,8 @@ class LogAnalyzer:
             'read': list (),
             'query': list (),
             'pickle': list (),
-            'relationship': list ()
+            'relationship': list (),
+            'memo_indexing': list ()
             }
 
 
@@ -38,6 +39,7 @@ class LogAnalyzer:
         que = numpy.average (self.res['query'])
         pic = numpy.average (self.res['pickle'])
         rel = numpy.average (self.res['relationship'])
+        ind = numpy.average (self.res['memo_indexing'])
 
         print 'QUERY OPENCALAIS:    %f' % (rea + que + pic)
         print 'Read time:           %f' % rea
@@ -45,11 +47,12 @@ class LogAnalyzer:
         print 'Storage time:        %f' % pic
         print '\n'
 
-        print 'INDEXING:            %f' % (imp + pre + pro + sto)
+        print 'INDEXING:            %f' % (imp + pre + pro + sto + ind)
         print 'Importing time:      %f' % imp
         print 'Preprocessing time:  %f' % pre
         print 'Processing time:     %f' % pro
         print 'Storage time:        %f' % sto
+        print 'Memo indexing:       %f' % ind
         print '\n'
 
         print 'COMP. RELATINOSHIPS: %f' % rel
