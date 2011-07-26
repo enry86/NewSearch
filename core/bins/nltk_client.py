@@ -208,7 +208,7 @@ class Extractor:
             if v and len (np):
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
-                    self.triples.append ((b[0], v, b[1], self.docid))
+                    self.triples.append ((b[0].strip(), v.strip(), b[1].strip(), self.docid))
                     #self.db.insert_tri ((b[0], v, b[1], self.docid))
 
 

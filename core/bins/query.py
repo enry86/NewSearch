@@ -4,6 +4,7 @@ import utils.database
 import sys
 import nltk
 from bins import relations
+from bins import index
 
 class Query:
     def __init__ (self):
@@ -77,14 +78,18 @@ class QueryParser:
 
 class QueryManager:
 
-    def __init__ (self):
+    def __init__ (self, ind, test, hexa):
         self.db = utils.database.DataBaseMysql ()
-        self.stm = nltk.stem.PorterStemmer ()
+        self.lem = nltk.stem.WordNetLemmatizer ()
+        self.test = test
+        if hexa:
+            self.sim = index.IndexSimilarity (test, ind)
+        else:
+            self.sim = relations.CompSimilarity (test)
 
     def run_query (self, sq):
         query = self.__analyze (sq)
-        cs = relations.CompSimilarity ()
-        res = cs.query_similarity (query)
+        res = self.sim.query_similarity (query)
         print len(res)
         return res
 
@@ -97,15 +102,6 @@ class QueryManager:
         query_fin = self.__refine_qry (qry_ent)
         return query_fin
 
-    '''
-    def analyze (self, q):
-        res = list ()
-        subqs = q.split (';')
-        for sq in subqs:
-            sub_q = self.__get_triples (sq)
-            res.append (sub_q)
-        print res
-        '''
 
     def __build_query (self, pos):
         prs = QueryParser ()
@@ -128,12 +124,15 @@ class QueryManager:
         return res
 
     def __find_ent_cmp (self, c):
+        ent_k = list ()
         for i, t in enumerate (c):
             e = self.db.get_entity (t)
             if e != None:
                 c[i] = '_nsid' + str (e)
+                ent_k.append (self.lem.lemmatize (t))
             else:
-                c[i] = self.stm.stem (t)
+                c[i] = self.lem.lemmatize (t)
+        c += ent_k
 
 
     def __refine_qry (self, qry):
@@ -155,7 +154,6 @@ class QueryManager:
                     tmp_res.append ((id_t, s, verb, '*'))
                     for o in subs [k + 1:]:
                         tmp_res.append ((id_t, s, verb, o))
-
             if tmp_res:
                 res += tmp_res
         return res
@@ -181,50 +179,7 @@ class QueryManager:
                 words.append (t)
         return ents, words
 
-    '''
-    def __get_triples (self, sq):
-        res = list ()
-        ws = sq.split ()
-        ps = nltk.pos_tag (ws)
-        vs, ns = self.__isolate_verbs (ps)
-        is_ent = self.__get_entities (ns)
-        bigr = self.__get_bigrams (ns)
-        if not vs:
-            vs = ['*']
-        for v in vs:
-            for b in bigr:
-                v = self.stm.stem (v)
-                res.append ((b[0], v, b[1]))
-        return res
 
-    def __get_entities (self, np):
-        for i, n in enumerate (np):
-            e = self.db.get_entity (n)
-            if e != None:
-                np[i] = '_nsid' + str (e)
-            else:
-                np[i] = self.stm.stem (np[i])
-
-
-    def __isolate_verbs (self, ps):
-        verbs = list ()
-        nouns = list ()
-        for t in ps:
-            if 'VB' in t[1]:
-                verbs.append (t[0])
-            else:
-                nouns.append (t[0])
-        return verbs, nouns
-
-    def __get_bigrams (self, np):
-        res = list ()
-        for i in range (len (np) - 1):
-            if i < len (np) - 1:
-                res.append ((np[i], np[i + 1]))
-            else:
-                res.append ((np[i], '*'))
-        return res
-        '''
 
 def main (q):
     qan = QueryManager ()

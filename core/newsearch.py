@@ -66,8 +66,16 @@ def main_index (fs):
 
 def main_query (q):
     from bins import query
-
-    qa = query.QueryManager ()
+    from bins import index
+    index_memo = None
+    if newsearch_cnf['hexa_memo']:
+        if not newsearch_cnf['test']:
+            print 'Building Index...'
+        ind = index.Indexer (newsearch_cnf['test'])
+        index_memo = ind.build_index ()
+        if not newsearch_cnf['test']:
+            print 'Index Built'
+    qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'])
     res = qa.run_query (q)
     for r in res:
         print r
