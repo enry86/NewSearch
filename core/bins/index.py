@@ -16,6 +16,7 @@ class Index:
         self.od = dict ()
         self.sod = dict ()
         self.sd = dict ()
+        self.svd = dict ()
 
     def add_triple (self, tri):
         doc, idt, sub, vrb, obj = tri
@@ -89,6 +90,22 @@ class Index:
         except KeyError:
             curr [doc] = 1
 
+    def __add_svd (self, doc, sub, vrb):
+        try:
+            self.sod [sub] [0] += 1
+        except KeyError:
+            self.sod [sub] = [1, dict ()]
+        curr = self.sod [sub] [1]
+        try:
+            curr [vrb] [0] += 1
+        except KeyError:
+            curr [vrb] = [1, dict ()]
+        curr = curr [vrb] [1]
+        try:
+            curr [doc] += 1
+        except KeyError:
+            curr [doc] = 1
+
     def __add_sd (self, doc, sub):
         try:
             self.sd [sub] [0] += 1
@@ -145,7 +162,7 @@ class IndexSimilarity:
         for d1, in self.docs:
             if self.test:
                 start = time.time ()
-            for d2, in docs:
+            for d2, in self.docs:
                 if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) == 0:
                     sim = self.__compute_sim (d1, d2)
                     self.db.insert_sim ((d1, d2, sim))
@@ -191,14 +208,39 @@ class IndexSimilarity:
         return res
 
     def __get_a_res (self, q):
-        print q
         i, s, v, o = q
-        docs = dict ()
+        docs_a = dict ()
+        docs_b = dict ()
+        cnt_a = 0
+        cnt_b = 0
         try:
-            docs = self.index.sovd [s][1][o][1][v][1]
+            if v == '*' and o == '*':
+                docs_a = self.index.sd [s][1]
+                cnt_a = self.index.sd [s][0]
+            elif v == '*':
+                docs_a = self.index.sod [s][1][o][1]
+                cnt_a = self.index.sod [s][1][o][0]
+            elif o == '*':
+                docs_a = self.index.svd [s][1][v][1]
+                cnt_a = self.index.svd [s][1][v][0]
+            else:
+                docs_a = self.index.sovd [s][1][o][1][v][1]
+                cnt_a = self.index.sovd [s][1][o][1][v][0]
         except KeyError:
-            pass
-        return docs
+            cnt_a = 0
+        if o != '*':
+            try:
+                if v == '*':
+                    docs_b = self.index.sod [o][1][s][1]
+                    cnt_b = self.index.sod [o][1][s][0]
+                else:
+                    docs_b = self.index.sovd [o][1][s][1][v][1]
+                    cnt_b = self.index.sovd [o][1][s][1][v][0]
+            except KeyError:
+                cnt_b = 0
+        if cnt_b > cnt_a:
+            docs_a = docs_b
+        return docs_a
 
     def __add_a_res (self, store, t_res):
         self.__add_t_res (store, t_res, 0)
@@ -215,12 +257,28 @@ class IndexSimilarity:
 
     def __get_b_res (self, q):
         i, s, v, o = q
-        docs = dict ()
+        docs_a = dict ()
+        docs_b = dict ()
+        cnt_a = 0
+        cnt_b = 0
         try:
-            docs = self.index.sod [s][1][o][1]
+            if o == '*':
+                docs_a = self.index.sd [s][1]
+                cnt_a = self.index.sd [s][0]
+            else:
+                docs_a = self.index.sod [s][1][o][1]
+                cnt_a = self.index.sod [s][1][o][0]
         except KeyError:
-            pass
-        return docs
+            cnt_a = 0
+        if o != '*':
+            try:
+                docs_b = self.index.sod [o][1][s][1]
+                cnt_b = self.index.sod [o][1][s][0]
+            except KeyError:
+                cnt_b = 0
+        if cnt_b > cnt_a:
+            docs_a = docs_b
+        return docs_a
 
     def __add_b_res (self, store, t_res):
         self.__add_t_res (store, t_res, 1)
@@ -255,7 +313,6 @@ class IndexSimilarity:
         try:
             docs_o = self.index.od [o][1]
         except KeyError:
-            print self.index.od.has_key (o)
             pass
         for d in docs_o:
             try:
@@ -270,6 +327,7 @@ class IndexSimilarity:
 
     def __add_tmp_res (self, q_store, tmp_store):
         for k in q_store:
+            print q_store[k]
             q_res = q_store [k]
             q_res[1] -= q_res[0]
             q_res[2] -= (q_res[0] + q_res[1])
@@ -297,7 +355,7 @@ class IndexSimilarity:
             s3 = float (c) / float (d - a - b)
             print a, b, c, d
             score = s1 + (1 - s1) * (s2 + (1 - s2) * s3)
-            res.append ((doc, score))
+            res.append ((score, doc))
         return res
 
 
