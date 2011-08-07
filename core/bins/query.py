@@ -89,7 +89,9 @@ class QueryManager:
             self.sim = relations.CompSimilarity (test)
 
     def run_query (self, sq):
+        print '#Building query'
         query = self.__analyze (sq)
+        print '#Query built'
         res = self.sim.query_similarity (query)
         return res
 

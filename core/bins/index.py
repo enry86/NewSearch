@@ -317,7 +317,6 @@ class IndexSimilarity:
         if o != '*':
             try:
                 docs_s2 = self.index.sd [o][1]
-                print docs_s2
             except KeyError:
                 pass
             try:
@@ -328,7 +327,6 @@ class IndexSimilarity:
             docs_o2 = self.index.od [s][1]
         except KeyError:
             pass
-        print len (docs_s1), len (docs_s2), len (docs_o1), len (docs_o2)
         docs = dict ()
         self.__merge_res (docs, docs_s1)
         self.__merge_res (docs, docs_s2)
@@ -376,7 +374,6 @@ class IndexSimilarity:
             s1 = float (a) / float (d)
             s2 = float (b) / float (d - a)
             s3 = float (c) / float (d - a - b)
-            #print a, b, c, d
             score = s1 + (1 - s1) * (s2 + (1 - s2) * s3)
             res.append ((score, doc))
         return res

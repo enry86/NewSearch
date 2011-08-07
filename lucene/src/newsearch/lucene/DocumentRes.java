@@ -20,6 +20,6 @@ public class DocumentRes implements Comparable {
     }
 
     public String toString () {
-        return "(" + this.score + ", " + this.id + ")";
+        return this.score + " " + this.id;
     }
 }

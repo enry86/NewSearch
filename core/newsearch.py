@@ -76,17 +76,17 @@ def main_query (q):
     db = utils.database.DataBaseMysql ()
     if newsearch_cnf['hexa_memo']:
         if not newsearch_cnf['test']:
-            print 'Building Index...'
+            print '#Building Index...'
         ind = index.Indexer (newsearch_cnf['test'], db)
         index_memo = ind.build_index ()
         if not newsearch_cnf['test']:
-            print 'Index Built'
+            print '#Index Built'
     qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'], db)
     res = qa.run_query (q)
     res.sort ()
     db.close_con ()
     for r in res:
-        print r
+        print r[0], r[1]
 
 
 
