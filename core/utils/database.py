@@ -215,10 +215,8 @@ class DataBaseMysql:
         if db_start:
             query = self.__query_ent % (kw, kw,)
             self.cur.execute (query)
-            scr = self.cur.fetchone ()
+            res = self.cur.fetchall ()
             self.cur.close ()
-            if scr:
-                res = int (scr [0])
         return res
 
     def __get_all_query (self, query, val):

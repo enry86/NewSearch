@@ -118,6 +118,7 @@ class Index:
             curr [doc] = 1
 
 
+
     def __add_od (self, doc, obj):
         try:
             self.od [obj] [0] += 1
@@ -304,22 +305,44 @@ class IndexSimilarity:
 
     def __get_c_res (self, q):
         i, s, v, o = q
-        docs = dict ()
-        docs_o = dict ()
+        docs_s1 = dict ()
+        docs_s2 = dict ()
+        docs_o1 = dict ()
+        docs_o2 = dict ()
         try:
-            docs = self.index.sd [s][1]
+            docs_s1 = self.index.sd [s][1]
         except KeyError:
             pass
-        try:
-            docs_o = self.index.od [o][1]
-        except KeyError:
-            pass
-        for d in docs_o:
+        if o != '*':
             try:
-                docs [d] += docs_o [d]
+                docs_s2 = self.index.sd [o][1]
+                print docs_s2
             except KeyError:
-                docs [d] = docs_o [d]
+                pass
+            try:
+                docs_o1 = self.index.od [o][1]
+            except KeyError:
+                pass
+        try:
+            docs_o2 = self.index.od [s][1]
+        except KeyError:
+            pass
+        print len (docs_s1), len (docs_s2), len (docs_o1), len (docs_o2)
+        docs = dict ()
+        self.__merge_res (docs, docs_s1)
+        self.__merge_res (docs, docs_s2)
+        self.__merge_res (docs, docs_o1)
+        self.__merge_res (docs, docs_o2)
         return docs
+
+
+    def __merge_res (self, dst, src):
+        for d in src:
+            try:
+                dst [d] += src [d]
+            except KeyError:
+                dst [d] = src [d]
+
 
     def __add_c_res (self, store, t_res):
         self.__add_t_res (store, t_res, 2)
@@ -327,7 +350,6 @@ class IndexSimilarity:
 
     def __add_tmp_res (self, q_store, tmp_store):
         for k in q_store:
-            print q_store[k]
             q_res = q_store [k]
             q_res[1] -= q_res[0]
             q_res[2] -= (q_res[0] + q_res[1])
@@ -353,7 +375,7 @@ class IndexSimilarity:
             s1 = float (a) / float (d)
             s2 = float (b) / float (d - a)
             s3 = float (c) / float (d - a - b)
-            print a, b, c, d
+            #print a, b, c, d
             score = s1 + (1 - s1) * (s2 + (1 - s2) * s3)
             res.append ((score, doc))
         return res

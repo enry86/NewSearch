@@ -97,8 +97,17 @@ class QueryManager:
         tok = q.split ()
         pos = nltk.pos_tag (tok)
         qry = self.__build_query (pos)
-        qry_ent = self.__find_ent (qry)
-        query_fin = self.__refine_qry (qry_ent)
+        query_kw = self.__refine_qry (qry)
+        query_fin = list ()
+        for tri in query_kw:
+            query_fin += self.__find_ent (tri)
+            idt, s, v, o = tri
+            s = self.lem.lemmatize (s)
+            if v != '*':
+                v = self.lem.lemmatize (v)
+            if o != '*':
+                o = self.lem.lemmatize (o)
+            query_fin.append (('__query__', s, v, o))
         return query_fin
 
 
@@ -113,14 +122,26 @@ class QueryManager:
         query = prs.get_result ()
         return query
 
-    def __find_ent (self, qry):
+    def __find_ent (self, tri):
         res = list ()
-        for q in qry:
-            self.__find_ent_cmp (q[0])
-            self.__find_ent_cmp (q[2])
-            tri = (q[0], q[1], q[2])
-            res.append (tri)
+        idt, s, v, o = tri
+        ents_s = self.db.get_entity (s)
+        if o != '*':
+            ents_o = self.db.get_entity (o)
+        else:
+            ents_o = list ()
+        if ents_s and ents_o:
+            for e_s, score_s in ents_s:
+                for e_o, score_o in ents_o:
+                    sub = '_nsid' + str (e_s)
+                    obj = '_nsid' + str (e_o)
+                    res.append((idt, sub, v, obj))
+        elif ents_s:
+            for ent, score in ents_s:
+                sub = '_nsid' + str (ent)
+                res.append ((idt, sub, v, self.lem.lemmatize (o)))
         return res
+
 
     def __find_ent_cmp (self, c):
         ent_k = list ()

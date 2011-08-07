@@ -77,6 +77,7 @@ def main_query (q):
             print 'Index Built'
     qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'])
     res = qa.run_query (q)
+    res.sort ()
     for r in res:
         print r
 
