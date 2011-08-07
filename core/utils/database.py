@@ -15,9 +15,12 @@ class DataBaseMysql:
     __insert_pin = """insert into pages_index values (%s, NOW())"""
     __retr_triples_doc = """select triple from docs where docid = %s"""
     __get_tri_doc = """select d.triple, t.subject, t.verb, t.object from docs d, triples t where t.id = d.triple and d.docid = %s"""
+
+    #DOCS SIMILARITY
     __lookup_sim = """select count(*) from doc_sim where (doc1 = %s and doc2=%s) or (doc1=%s and doc2=%s)"""
     __insert_sim = """insert into doc_sim values (%s, %s, %s)"""
     __get_docids = """select distinct docid from docs"""
+    __get_siblings = """select distinct docid from keywords where id  in (select distinct id from keywords where docid = %s) and docid != %s"""
 
     __retr_sim_tri = """insert into tmp_score (select %s, rel.triple, TRUNCATE(rel.tot / total.cnt, 10) as score from \
 (select triple, count(docid) as tot from docs where docid in \
@@ -243,6 +246,8 @@ class DataBaseMysql:
     def get_docs (self):
         return self.__get_all (self.__get_docids)
 
+    def get_sib_docs (self, doc):
+        return self.__get_all_query (self.__get_siblings, doc)
 
     def get_triples (self):
         return self.__get_all (self.__get_all_triples)

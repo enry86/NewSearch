@@ -164,6 +164,7 @@ class IndexSimilarity:
         for d1, in self.docs:
             if self.test:
                 start = time.time ()
+            sib_docs = self.db.get_sib_docs ((d1, d1))
             for d2, in self.docs:
                 if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) == 0:
                     sim = self.__compute_sim (d1, d2)
