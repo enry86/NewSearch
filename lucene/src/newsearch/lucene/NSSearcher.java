@@ -20,12 +20,19 @@ import org.apache.lucene.document.Document;
 import java.io.IOException;
 import java.io.File;
 
+import java.util.ArrayList;
+
+
+
 public class NSSearcher {
     private StandardAnalyzer sa = null;
     private SimpleFSDirectory dir = null;
     private IndexSearcher searcher = null;
     private QueryParser parser = null;
+    private ArrayList<DocumentRes> results = null;
     private int MAX_RES = 100;
+
+
 
     /** Creates a new instance of SearchEngine */
     public NSSearcher () throws IOException {
@@ -33,12 +40,13 @@ public class NSSearcher {
         dir = new SimpleFSDirectory (new File ("index.ind"));
         searcher = new IndexSearcher (dir);
         parser = new QueryParser(Version.LUCENE_31, "content", sa);
+        results = new ArrayList<DocumentRes> ();
     }
 
-    public void performSearch (String queryString) throws IOException, ParseException {
+    public ArrayList<DocumentRes> performSearch (String queryString) throws IOException, ParseException {
         Query query = parser.parse (queryString);
         doStreamingSearch (searcher, query);
-
+        return results;
     }
 
     private void doStreamingSearch (final Searcher searcher, Query query) throws IOException {
@@ -50,7 +58,11 @@ public class NSSearcher {
                 @Override
                     public void collect(int doc) throws IOException {
                     Document d = searcher.doc (doc);
-                    System.out.println("doc=" + d.get("id") + " score=" + scorer.score());
+                    //System.out.println("doc=" + d.get("id") + "
+                    //score=" + scorer.score());
+                    DocumentRes tmp = new DocumentRes (d.get ("id"), scorer.score ());
+                    results.add (tmp);
+
                 }
 
                 @Override

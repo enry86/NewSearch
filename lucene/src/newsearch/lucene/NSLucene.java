@@ -1,8 +1,13 @@
 package newsearch.lucene;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import java.util.Collections;
 
 public class NSLucene {
     public static void main (String[] args) {
+        ArrayList<DocumentRes> res;
         if (args.length > 0) {
             if (args[0].compareTo ("index") == 0) {
                 String[] files = new String [args.length - 1];
@@ -17,7 +22,14 @@ public class NSLucene {
             else if (args[0].compareTo ("query") == 0) {
                 try {
                     NSSearcher s = new NSSearcher ();
-                    s.performSearch (args[1]);
+                    res = s.performSearch (args[1]);
+                    Collections.sort (res);
+                    Iterator<DocumentRes> i = res.iterator ();
+                    while (i.hasNext ()) {
+                        DocumentRes tmp = (DocumentRes) i.next ();
+                        System.out.println (tmp);
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace ();
                 }

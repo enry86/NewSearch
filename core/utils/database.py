@@ -32,7 +32,7 @@ class DataBaseMysql:
     __store_exp = """insert into expansion values (%s, %s, %s)"""
     __lookup_tri_doc = """select count(*) from docs where triple = %s and docid = %s"""
 
-    __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%%%s%%") as t where keyword like "%%%s%%" group by k.id order by score desc"""
+    __query_ent = """select   k.id, sum(k.count)/t.total as score from keywords k, (select sum(count) as total from keywords where keyword like "%% %s %%" or keyword like "%% %s" or keyword like "%s %%" or keyword like "%s") as t where keyword like "%% %s %%" or keyword like "%% %s" or keyword like "%s %%" or keyword like "%s" group by k.id order by score desc"""
 
     __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(11,10))"""
 
@@ -225,7 +225,7 @@ class DataBaseMysql:
         res = None
         db_start = self.__start_connection ()
         if db_start:
-            query = self.__query_ent % (kw, kw,)
+            query = self.__query_ent % (kw, kw, kw, kw, kw, kw, kw, kw,)
             self.cur.execute (query)
             res = self.cur.fetchall ()
             #self.cur.close ()
