@@ -166,9 +166,14 @@ class IndexSimilarity:
                 start = time.time ()
             sib_docs = self.db.get_sib_docs ((d1, d1))
             for d2, in self.docs:
+                nf = False
                 if d1 != d2 and self.db.lookup_sim ((d1, d2, d2, d1)) == 0:
-                    sim = self.__compute_sim (d1, d2)
-                    self.db.insert_sim ((d1, d2, sim))
+                    try:
+                        sim = self.__compute_sim (d1, d2)
+                    except KeyError:
+                        nf = True
+                    if not nf:
+                        self.db.insert_sim ((d1, d2, sim))
             if self.test:
                 stop = time.time ()
                 print 'relationship %f' % (stop - start)
