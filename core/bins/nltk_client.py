@@ -10,7 +10,7 @@ import utils.database
 
 
 class Extractor:
-    def __init__ (self, conf):
+    def __init__ (self, conf, db):
         self.gram = r"""
                 NP: {<.*>+}
                 }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{
@@ -34,7 +34,8 @@ class Extractor:
                           'they','this','tis','to','too','twas','us','wants','was','we',\
                           'were','what','when','where','which','while','who','whom','why',\
                           'will','with','would','yet','you','your',"'s",',']
-        self.db = utils.database.DataBaseMysql ()
+        #self.db = utils.database.DataBaseMysql ()
+        self.db = db
         self.conf = conf
         self.triples = list ()
 

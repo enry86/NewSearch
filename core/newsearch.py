@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import utils.database
 import sys
 sys.path.append ('lib')
 
@@ -31,6 +32,10 @@ def main_index (fs):
     from bins import relations
     from bins import index
 
+    db = utils.database.DataBaseMysql ()
+    if not  db.db_up:
+        print 'Database error'
+        sys.exit (1)
     if not newsearch_cnf['test']:
         print 'Starting OpenCalais queries...'
     cal = calais_client.CalaisClient (calais_cnf, fs)
@@ -38,12 +43,12 @@ def main_index (fs):
     if not newsearch_cnf['test']:
         print 'OpenCalais service queried for %d files' % len (fs)
         print 'Starting documents analysis'
-    vrb = verba_pic.Verba_Pickle (verba_cnf)
+    vrb = verba_pic.Verba_Pickle (verba_cnf, db)
     vrb.analyze_docs ()
     if not newsearch_cnf['test']:
         print 'Finish documents processing'
 
-    ind = index.Indexer (newsearch_cnf['test'])
+    ind = index.Indexer (newsearch_cnf['test'], db)
     index_memo = ind.build_index ()
     if not newsearch_cnf['test']:
         print 'Index Built'
@@ -56,11 +61,11 @@ def main_index (fs):
     if not newsearch_cnf['test']:
         print 'Computing docs similarity'
     if newsearch_cnf['hexa_memo'] == True:
-        sim = index.IndexSimilarity (newsearch_cnf['test'], index_memo)
+        sim = index.IndexSimilarity (newsearch_cnf['test'], index_memo, db)
     else:
-        sim = relations.CompSimilarity (newsearch_cnf['test'])
+        sim = relations.CompSimilarity (newsearch_cnf['test'], db)
     sim.store_similarity ()
-
+    db.close_con ()
     if not newsearch_cnf['test']:
         print 'Done'
 
@@ -68,16 +73,18 @@ def main_query (q):
     from bins import query
     from bins import index
     index_memo = None
+    db = utils.database.DataBaseMysql ()
     if newsearch_cnf['hexa_memo']:
         if not newsearch_cnf['test']:
             print 'Building Index...'
-        ind = index.Indexer (newsearch_cnf['test'])
+        ind = index.Indexer (newsearch_cnf['test'], db)
         index_memo = ind.build_index ()
         if not newsearch_cnf['test']:
             print 'Index Built'
-    qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'])
+    qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'], db)
     res = qa.run_query (q)
     res.sort ()
+    db.close_con ()
     for r in res:
         print r
 

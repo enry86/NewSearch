@@ -144,8 +144,9 @@ class Index:
 
 
 class IndexSimilarity:
-    def __init__ (self, test, index):
-        self.db = utils.database.DataBaseMysql ()
+    def __init__ (self, test, index, db):
+        #self.db = utils.database.DataBaseMysql ()
+        self.db = db
         self.docs = self.db.get_docs ()
         self.tot_d = len (self.docs)
         self.test = test
@@ -391,8 +392,9 @@ class IndexSimilarity:
 
 class Indexer:
 
-    def __init__ (self, test):
-        self.db = utils.database.DataBaseMysql ()
+    def __init__ (self, test, db):
+        #self.db = utils.database.DataBaseMysql ()
+        self.db = db
         self.test = test
         self.ind = Index ()
 

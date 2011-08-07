@@ -22,12 +22,12 @@ import time
 
 
 class Verba_Pickle:
-    def __init__ (self, conf):
+    def __init__ (self, conf, db):
         self.conf = conf
         self.test = conf['test']
         fnames = os.listdir (conf['in_dir'])
         self.docs = self.__read_files (fnames)
-        self.ext = nltk_client.Extractor (conf)
+        self.ext = nltk_client.Extractor (conf, db)
 
 
     def __read_files (self, fnames):

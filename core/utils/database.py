@@ -52,16 +52,28 @@ class DataBaseMysql:
         self.passwd = mysqlsettings.MYSQL_PASSWD
         self.db = mysqlsettings.MYSQL_DB
         self.host = mysqlsettings.MYSQL_HOST
+        self.db_up = False
+        self.__start_connection ()
+
+
+
+    def close_con (self):
+        self.con.close ()
 
 
     def __start_connection (self):
         res =  True
-        try:
-            self.con = MySQLdb.connect (user = self.user, passwd = self.passwd, host = self.host, db = self.db)
-            self.cur = self.con.cursor ();
-        except MySQLdb.Error:
-            res = False
+        if self.db_up:
+            res = True
+        else:
+            try:
+                self.con = MySQLdb.connect (user = self.user, passwd = self.passwd, host = self.host, db = self.db)
+                self.cur = self.con.cursor ();
+                self.db_up = True
+            except MySQLdb.Error:
+                res = False
         return res
+
 
 
     def __insert_dupl (self, query_ins, query_upd, vals):
@@ -70,12 +82,12 @@ class DataBaseMysql:
             try:
                 self.cur.execute (query_ins, vals)
                 self.con.commit ()
-                self.cur.close ()
+                #self.cur.close ()
             except MySQLdb.IntegrityError:
                 try:
                     self.cur.execute (query_upd, vals)
                     self.con.commit ()
-                    self.cur.close ()
+                    #self.cur.close ()
                 except MySQLdb.Error:
                     res = False
         return res
@@ -87,7 +99,7 @@ class DataBaseMysql:
             try:
                 self.cur.execute (query, vals)
                 self.con.commit ()
-                self.cur.close ()
+                #self.cur.close ()
             except MySQLdb.IntegrityError, m:
                 print m
                 res = False
@@ -101,7 +113,7 @@ class DataBaseMysql:
             try:
                 self.cur.execute (query, vals)
                 self.con.commit ()
-                self.cur.close ()
+                #self.cur.close ()
             except MySQLdb.IntegrityError:
                 pass
         return res
@@ -156,7 +168,7 @@ class DataBaseMysql:
             try:
                 self.cur.execute (self.__insert_tri, tri)
                 self.con.commit ()
-                self.cur.close ()
+                #self.cur.close ()
             except MySQLdb.IntegrityError:
                 pass
 
@@ -170,7 +182,7 @@ class DataBaseMysql:
                 res = self.cur.fetchone () [0]
             except TypeError:
                 res = -1
-            self.cur.close ()
+            #self.cur.close ()
         return res
 
 
@@ -192,7 +204,7 @@ class DataBaseMysql:
         try:
             self.cur.execute (self.__rank_docs)
             res = self.cur.fetchall ()
-            self.cur.close ()
+            #self.cur.close ()
         except MySQLdb.Error, m:
             print m
             res = list ()
@@ -205,7 +217,7 @@ class DataBaseMysql:
         if db_start:
             self.cur.execute (query)
             res = self.cur.fetchall ()
-            self.con.close ()
+            #self.con.close ()
         return res
 
 
@@ -216,7 +228,7 @@ class DataBaseMysql:
             query = self.__query_ent % (kw, kw,)
             self.cur.execute (query)
             res = self.cur.fetchall ()
-            self.cur.close ()
+            #self.cur.close ()
         return res
 
     def __get_all_query (self, query, val):
@@ -225,7 +237,7 @@ class DataBaseMysql:
         if db_start:
             self.cur.execute (query, val)
             res = self.cur.fetchall ()
-            self.cur.close ()
+            #self.cur.close ()
         return res
 
     def get_docs (self):
@@ -269,7 +281,7 @@ class DataBaseMysql:
                 self.cur.execute (self.__retr_sim_tri, val)
             self.con.commit ()
             self.__store_best (size, doc, tri)
-            self.cur.close ()
+            #self.cur.close ()
             res = True
         return res
 

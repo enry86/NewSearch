@@ -78,12 +78,13 @@ class QueryParser:
 
 class QueryManager:
 
-    def __init__ (self, ind, test, hexa):
-        self.db = utils.database.DataBaseMysql ()
+    def __init__ (self, ind, test, hexa, db):
+        #self.db = utils.database.DataBaseMysql ()
+        self.db = db
         self.lem = nltk.stem.WordNetLemmatizer ()
         self.test = test
         if hexa:
-            self.sim = index.IndexSimilarity (test, ind)
+            self.sim = index.IndexSimilarity (test, ind, db)
         else:
             self.sim = relations.CompSimilarity (test)
 

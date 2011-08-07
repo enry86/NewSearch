@@ -13,8 +13,9 @@ V_FACTOR = 0.10
 
 class CompSimilarity:
 
-    def __init__ (self, test):
-        self.db = utils.database.DataBaseMysql ()
+    def __init__ (self, test, db):
+        #self.db = utils.database.DataBaseMysql ()
+        self.db = db
         self.test = test
 
     def store_similarity (self):
