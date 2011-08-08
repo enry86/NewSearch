@@ -6,34 +6,13 @@ CREATE SCHEMA IF NOT EXISTS `enrico` DEFAULT CHARACTER SET latin1 ;
 USE `enrico` ;
 
 -- -----------------------------------------------------
--- Table `enrico`.`triples`
--- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `enrico`.`triples` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT ,
-  `subject` VARCHAR(200) NULL DEFAULT NULL ,
-  `verb` VARCHAR(200) NULL DEFAULT NULL ,
-  `object` VARCHAR(200) NULL DEFAULT NULL ,
-  PRIMARY KEY (`id`) ,
-  UNIQUE INDEX `triple_UNIQUE` (`subject` ASC, `verb` ASC, `object` ASC) )
-ENGINE = InnoDB
-AUTO_INCREMENT = 3138
-DEFAULT CHARACTER SET = latin1;
-
-
--- -----------------------------------------------------
 -- Table `enrico`.`docs`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `enrico`.`docs` (
   `docid` VARCHAR(45) NOT NULL ,
   `triple` INT(11) NOT NULL ,
   `count` INT(11) NOT NULL ,
-  PRIMARY KEY (`docid`, `triple`) ,
-  INDEX `fk_docs_triples1` (`triple` ASC) ,
-  CONSTRAINT `fk_docs_triples1`
-    FOREIGN KEY (`triple` )
-    REFERENCES `enrico`.`triples` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`docid`, `triple`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
@@ -42,7 +21,7 @@ DEFAULT CHARACTER SET = latin1;
 -- Table `enrico`.`entities`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `enrico`.`entities` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT ,
+  `id` INT(11) NOT NULL ,
   `oc_id` VARCHAR(200) NOT NULL ,
   PRIMARY KEY (`id`) ,
   UNIQUE INDEX `oc_id_UNIQUE` (`oc_id` ASC) )
@@ -59,13 +38,7 @@ CREATE  TABLE IF NOT EXISTS `enrico`.`keywords` (
   `keyword` VARCHAR(200) NOT NULL ,
   `docid` VARCHAR(45) NOT NULL ,
   `count` INT(11) NOT NULL ,
-  PRIMARY KEY (`id`, `docid`, `keyword`) ,
-  INDEX `fk_keywords_entities1` (`id` ASC) ,
-  CONSTRAINT `fk_keywords_entities1`
-    FOREIGN KEY (`id` )
-    REFERENCES `enrico`.`entities` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`id`, `docid`, `keyword`) )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
@@ -78,6 +51,21 @@ CREATE  TABLE IF NOT EXISTS `enrico`.`pages_index` (
   `ind_date` DATETIME NOT NULL ,
   PRIMARY KEY (`docid`) )
 ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `enrico`.`triples`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `enrico`.`triples` (
+  `id` INT(11) NOT NULL ,
+  `subject` VARCHAR(200) NULL DEFAULT NULL ,
+  `verb` VARCHAR(200) NULL DEFAULT NULL ,
+  `object` VARCHAR(200) NULL DEFAULT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX `triple_UNIQUE` (`subject` ASC, `verb` ASC, `object` ASC) )
+ENGINE = InnoDB
+AUTO_INCREMENT = 3138
 DEFAULT CHARACTER SET = latin1;
 
 

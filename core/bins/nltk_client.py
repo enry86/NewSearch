@@ -10,7 +10,7 @@ import utils.database
 
 
 class Extractor:
-    def __init__ (self, conf, db):
+    def __init__ (self, conf, first_tid, first_eid, db):
         self.gram = r"""
                 NP: {<.*>+}
                 }<TO>?<MD>*<VB|VB[A-Z]|CC>+<JJ>?{
@@ -35,15 +35,25 @@ class Extractor:
                           'were','what','when','where','which','while','who','whom','why',\
                           'will','with','would','yet','you','your',"'s",',']
         #self.db = utils.database.DataBaseMysql ()
+        self.tid = first_tid
+        self.eid = first_eid
         self.db = db
         self.conf = conf
         self.triples = list ()
+        self.documents = list ()
+        self.entities = list ()
+        self.keywords = list ()
+        self.lu_ent = dict ()
 
     '''
     It works, really...
     '''
     def get_relationship (self, doc_cal, docid, test):
         self.triples = list ()
+        self.documents = list ()
+        self.entities = list ()
+        self.keywords = list ()
+        self.lu_ent = dict ()
         proc = 0
         store = 0
         res = None
@@ -94,9 +104,7 @@ class Extractor:
         mark_text = str ()
         pos = self.__get_positions (ents)
         for p in pos:
-            res = self.__insert_ent (p[2], p[3])
-            if not res:
-                raise utils.database.DbError
+            self.__insert_ent (p[2], p[3])
             mark_text += text[base : p[0]]
             mark_text += (' %s ' % p[2])
             base = p[0] + p[1]
@@ -104,14 +112,21 @@ class Extractor:
         return mark_text
 
     def __insert_ent (self, ocid, kws):
-        res = self.db.insert_ent ((ocid,))
-        if res:
-            nsid = self.db.lookup_ent ((ocid,))
-            if not kws.lower () in self.stopw:
-                self.db.insert_kws ((nsid, kws.lower(), self.docid,))
-        else:
-            res = False
-        return res
+        try:
+            nsid = self.lu_ent [ocid]
+            self.keywords.append ((nsid, kws.lower (), self.docid))
+        except KeyError:
+            self.lu_ent [ocid] = self.eid
+            self.entities.append ((self.eid, ocid))
+            self.keywords.append ((self.eid, kws.lower (), self.docid))
+            self.eid += 1
+        #res = self.db.insert_ent ((self.eid, ocid))
+        #if res:
+        #    if not kws.lower () in self.stopw:
+        #        self.db.insert_kws ((nsid, kws.lower(), self.docid,))
+        #else:
+        #    res = False
+        #return res
 
 
     def __word_tokenize (self, sent):
@@ -166,7 +181,8 @@ class Extractor:
                 if w[0].startswith ('http://d.opencalais.com'):
                     if tmp:
                         res.append (tmp.strip ())
-                    tmp = self.db.lookup_ent ((w[0],))
+                    #tmp = self.db.lookup_ent ((w[0],))
+                    tmp = self.lu_ent [w[0]]
                     res.append ('_nsid' + str (tmp))
                     tmp = str ()
                 else:
@@ -209,12 +225,17 @@ class Extractor:
             if v and len (np):
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
-                    self.triples.append ((b[0].strip(), v.strip(), b[1].strip(), self.docid))
+                    self.triples.append ((self.tid, b[0].strip(), v.strip(), b[1].strip()))
+                    self.documents.append ((self.docid, self.tid))
+                    self.tid += 1
                     #self.db.insert_tri ((b[0], v, b[1], self.docid))
 
 
     def __store_graph (self):
+        self.db.insert_many_ents (self.entities)
+        self.db.insert_many_kws (self.keywords)
         self.db.insert_many_tri (self.triples)
+        self.db.insert_many_docs (self.documents)
 
 
     def __get_bigrams (self, np):

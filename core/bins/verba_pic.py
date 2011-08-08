@@ -25,9 +25,12 @@ class Verba_Pickle:
     def __init__ (self, conf, db):
         self.conf = conf
         self.test = conf['test']
+        self.db = db
         fnames = os.listdir (conf['in_dir'])
         self.docs = self.__read_files (fnames)
-        self.ext = nltk_client.Extractor (conf, db)
+        first_tid = self.db.get_first_tid () [0]
+        first_eid = self.db.get_first_eid () [0]
+        self.ext = nltk_client.Extractor (conf, first_tid, first_eid, db)
 
 
     def __read_files (self, fnames):
@@ -50,6 +53,7 @@ class Verba_Pickle:
         tot = len (self.docs)
         cnt = 1
         err = False
+        wdb_st = 0
         for i, d in self.docs:
             try:
                 graph = self.ext.get_relationship (d, i, self.test)
@@ -63,6 +67,12 @@ class Verba_Pickle:
                 print "Processed document %d out of %d" % (cnt, tot)
             cnt += 1
             err = False
+        if self.test:
+            wdb_st = time.time ()
+        self.db.commit_con ()
+        if self.test:
+            wdb_end = time.time ()
+            print 'write_db %f' % (wdb_end - wdb_st)
 
 
 def read_opts (argv):
