@@ -91,10 +91,7 @@ def main_query (q):
 
 
 if __name__ == '__main__':
-    if len (sys.argv) == 1:
-        files = sys.argv[1:]
-        main_index (files)
-    elif sys.argv [1] == '-q':
+    if sys.argv [1] == '-q':
         try:
             query = sys.argv[2]
             main_query (query)
@@ -106,4 +103,7 @@ if __name__ == '__main__':
         calais_cnf['test'] = True
         verba_cnf['test'] = True
         files = sys.argv[2:]
+        main_index (files)
+    else:
+        files = sys.argv[1:]
         main_index (files)

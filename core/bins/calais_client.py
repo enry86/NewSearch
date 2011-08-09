@@ -58,28 +58,31 @@ class CalaisClient:
         except OSError:
             pass
         for i,f in enumerate(self.files):
-            try:
-                if self.test:
-                    start = time.time ()
-                cont = self.read_file (f)
-                if self.test:
-                    end_read = time.time ()
-                res = self.calais.analyze (cont, content_type = \
-                                               self.conf['type'], external_id = f)
-                if self.test:
-                    end_calais = time.time ()
-                fname = self.__get_filename (f)
-                self.write_file(self.conf['res'] + '/' + fname[:-4] + 'pickle', res)
-                if self.test:
-                    end_store = time.time ()
-                    print 'read %f' % (end_read - start)
-                    print 'query %f' % (end_calais - end_read)
-                    print 'pickle %f' % (end_store - end_calais)
-                else:
-                    print 'saved file %d out of %d' % (i, len(self.files))
-            except ValueError:
-                if not self.test:
-                    print 'Error on file %s' % f
+            fname = self.__get_filename (f)
+            if not os.path.isfile ('%s/%spickle' % (self.conf['res'], fname[:-4])):
+                try:
+                    if self.test:
+                        start = time.time ()
+                    cont = self.read_file (f)
+                    if self.test:
+                        end_read = time.time ()
+                    res = self.calais.analyze (cont, content_type = \
+                                                   self.conf['type'], external_id = f)
+                    if self.test:
+                        end_calais = time.time ()
+                    self.write_file(self.conf['res'] + '/' + fname[:-4] + 'pickle', res)
+                    if self.test:
+                        end_store = time.time ()
+                        print 'read %f' % (end_read - start)
+                        print 'query %f' % (end_calais - end_read)
+                        print 'pickle %f' % (end_store - end_calais)
+                    else:
+                        print 'saved file %d out of %d' % (i, len(self.files))
+                except ValueError:
+                    if not self.test:
+                        print 'Error on file %s' % f
+            elif not self.test:
+                print 'File already processed'
 
 
 def main ():
