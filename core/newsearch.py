@@ -89,6 +89,17 @@ def main_query (q):
         print r[0], r[1]
 
 
+def main_index_test ():
+    from bins import index
+    import time
+    test = False
+    db = utils.database.DataBaseMysql ()
+    ind = index.Indexer (test, db)
+    start = time.time ()
+    index_memo = ind.build_index ()
+    stop = time.time ()
+    print 'Index built: %f' % (stop - start)
+    raw_input ('Press any key...')
 
 if __name__ == '__main__':
     if sys.argv [1] == '-q':
@@ -104,6 +115,8 @@ if __name__ == '__main__':
         verba_cnf['test'] = True
         files = sys.argv[2:]
         main_index (files)
+    elif sys.argv [1] == '-i':
+        main_index_test ()
     else:
         files = sys.argv[1:]
         main_index (files)
