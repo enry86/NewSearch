@@ -17,6 +17,7 @@ class Index:
         self.sod = dict ()
         self.sd = dict ()
         self.svd = dict ()
+        self.expr = dict ()
 
     def add_triple (self, tri):
         doc, idt, sub, vrb, obj = tri
@@ -30,6 +31,14 @@ class Index:
         if obj != '__NONE':
             self.__add_do (doc, obj)
             self.__add_od (doc, obj)
+
+    def add_entity (self, ent, exp):
+        toks = exp.split ()
+        for t in toks:
+            try:
+                self.expr[t].append (ent)
+            except KeyError:
+                self.expr[t] = [ent]
 
 
     def __add_dsov (self, doc, sub, vrb, obj):
@@ -393,6 +402,28 @@ class IndexSimilarity:
                 store [k] = [0, 0, 0]
                 store [k] [i] = t_res [k]
 
+
+    def resolve_ent (self, kw):
+        tok = kw.split ()
+        res_tmp = dict ()
+        res = list ()
+        for t in tok:
+            try:
+                ents = self.index.expr[t]
+                for e in ents:
+                    try:
+                        res_tmp [e] += 1
+                    except KeyError:
+                        res_tmp [e] = 1
+                for r in res_tmp:
+                    if res_tmp [r] == len (tok):
+                        res.append (r)
+            except KeyError:
+                pass
+        return res
+
+
+
 class Indexer:
 
     def __init__ (self, test, db):
@@ -403,6 +434,7 @@ class Indexer:
 
     def build_index (self):
         docs = self.db.get_docs ()
+        ents = self.db.get_ents ()
         for d, in docs:
             if self.test:
                 start = time.time ()
@@ -414,6 +446,14 @@ class Indexer:
             if self.test:
                 end = time.time ()
                 print 'memo_indexing %f' % (end - start)
+        if self.test:
+            st_kw = time.time ()
+        for e,k in ents:
+            self.ind.add_entity (e, k)
+        if self.test:
+            en_kw = time.time ()
+            print 'keyw_ind %f' % (en_kw - st_kw)
+
         return self.ind
 
     def __flip (self, tri):

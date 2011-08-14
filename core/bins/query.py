@@ -128,19 +128,21 @@ class QueryManager:
     def __find_ent (self, tri):
         res = list ()
         idt, s, v, o = tri
-        ents_s = self.db.get_entity (s)
+        #ents_s = self.db.get_entity (s)
+        ents_s = self.sim.resolve_ent (s)
         if o != '*':
-            ents_o = self.db.get_entity (o)
+            #ents_o = self.db.get_entity (o)
+            ents_o = self.sim.resolve_ent (o)
         else:
             ents_o = list ()
         if ents_s and ents_o:
-            for e_s, score_s in ents_s:
-                for e_o, score_o in ents_o:
+            for e_s in ents_s:
+                for e_o in ents_o:
                     sub = '_nsid' + str (e_s)
                     obj = '_nsid' + str (e_o)
                     res.append((idt, sub, v, obj))
         elif ents_s:
-            for ent, score in ents_s:
+            for ent in ents_s:
                 sub = '_nsid' + str (ent)
                 res.append ((idt, sub, v, self.lem.lemmatize (o)))
         return res

@@ -47,6 +47,7 @@ class DataBaseMysql:
     __create_tmp = """create temporary table tmp_score (tri_or integer, tri_ds integer, score numeric(11,10))"""
 
     #QUERY ANSWERING
+    __get_all_ents = """select id, keyword from keywords"""
     __get_all_triples = """select * from triples"""
     __tmp_query_result = """create temporary table tmp_query (tri integer, score numeric(11,10))"""
     __insert_tmp_query = """insert into tmp_query values (%s, %s)"""
@@ -294,16 +295,17 @@ class DataBaseMysql:
     def get_docs (self):
         return self.__get_all (self.__get_docids)
 
+    def get_ents (self):
+        return self.__get_all (self.__get_all_ents)
+
     def get_sib_docs (self, doc):
         return self.__get_all_query (self.__get_siblings, doc)
 
     def get_triples (self):
         return self.__get_all (self.__get_all_triples)
 
-
     def get_triples_doc (self, doc):
         return self.__get_all_query (self.__retr_triples_doc, doc)
-
 
     def get_doc_tri (self, doc):
         return self.__get_all_query (self.__get_tri_doc, doc)
@@ -313,7 +315,6 @@ class DataBaseMysql:
 
     def get_first_eid (self):
         return self.__get_one (self.__get_firsteid)
-
 
     def create_tmp_query (self):
         res = True

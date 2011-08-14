@@ -69,10 +69,11 @@ def main_index (fs):
     if not newsearch_cnf['test']:
         print 'Done'
 
-def main_query (q):
+def main_query ():
     from bins import query
     from bins import index
     index_memo = None
+    q = str ()
     db = utils.database.DataBaseMysql ()
     if newsearch_cnf['hexa_memo']:
         if not newsearch_cnf['test']:
@@ -82,11 +83,15 @@ def main_query (q):
         if not newsearch_cnf['test']:
             print '#Index Built'
     qa = query.QueryManager (index_memo, newsearch_cnf['test'], newsearch_cnf['hexa_memo'], db)
-    res = qa.run_query (q)
-    res.sort ()
+    while q != 'q':
+        q = raw_input (">")
+        if q != 'q':
+            res = qa.run_query (q)
+            res.sort ()
+            for r in res:
+                print r[0], r[1]
     db.close_con ()
-    for r in res:
-        print r[0], r[1]
+
 
 
 def main_index_test ():
@@ -103,12 +108,7 @@ def main_index_test ():
 
 if __name__ == '__main__':
     if sys.argv [1] == '-q':
-        try:
-            query = sys.argv[2]
-            main_query (query)
-        except KeyError:
-            print 'No query provided\n'
-            sys.exit (0)
+        main_query ()
     elif sys.argv [1] == '-t':
         newsearch_cnf['test'] = True
         calais_cnf['test'] = True
