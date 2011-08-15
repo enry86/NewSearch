@@ -101,7 +101,7 @@ def main_index_test ():
     db = utils.database.DataBaseMysql ()
     ind = index.Indexer (test, db)
     start = time.time ()
-    index_memo = ind.build_index ()
+    index_memo = ind.build_index_test (100)
     stop = time.time ()
     print 'Index built: %f' % (stop - start)
     raw_input ('Press any key...')

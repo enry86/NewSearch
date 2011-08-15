@@ -3,7 +3,7 @@
 '''
 Adaptation and extension of hexastore indexing
 '''
-
+import pickle
 import utils.database
 import time
 
@@ -453,9 +453,58 @@ class Indexer:
         if self.test:
             en_kw = time.time ()
             print 'keyw_ind %f' % (en_kw - st_kw)
+        return self.ind
 
+    def build_index_test (self, inter):
+        docs = self.db.get_docs ()
+        ents = self.db.get_ents ()
+        n_doc = 0
+        d_tot = 0.0
+        n_ent = 0
+        e_tot = 0.0
+        memo_d = 0
+        memo_e = 0
+        for d, in docs:
+            n_doc += 1
+            if n_doc % inter == 1:
+                start = time.time ()
+            tris = self.db.get_doc_tri (d)
+            for tri in tris:
+                t = (d,) + tri
+                self.ind.add_triple (t)
+                #self.ind.add_triple (self.__flip (t))
+            if  n_doc > 0 and n_doc % inter == 0:
+                end = time.time ()
+                d_tot += end - start
+                memo_d += self.__test_memo_doc ()
+                print '%d\t%f\t%d\tdoc_ind' % (n_doc, d_tot, memo_d)
+        for e,k in ents:
+            n_ent += 1
+            if n_ent % inter == 0:
+                start = time.time ()
+            self.ind.add_entity (e, k)
+            if n_ent > 0 and n_ent % inter == 0:
+                end = time.time ()
+                e_tot += end - start
+                memo_e += self.__test_memo_ent ()
+                print '%d\t%f\t%d\tent_ind' % (n_ent, e_tot, memo_e)
         return self.ind
 
     def __flip (self, tri):
         d, i, s, v, o = tri
         return (d, i, o, v, s)
+
+    def __test_memo_doc (self):
+        data = 0
+        data += len (pickle.dumps (self.ind.dsov))
+        data += len (pickle.dumps (self.ind.do))
+        data += len (pickle.dumps (self.ind.sovd))
+        data += len (pickle.dumps (self.ind.od))
+        data += len (pickle.dumps (self.ind.sod))
+        data += len (pickle.dumps (self.ind.sd))
+        data += len (pickle.dumps (self.ind.svd))
+        return data
+
+    def __test_memo_ent (self):
+        data = len (pickle.dumps (self.ind.expr))
+        return data
