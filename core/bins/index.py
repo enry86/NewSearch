@@ -6,6 +6,7 @@ Adaptation and extension of hexastore indexing
 import pickle
 import utils.database
 import time
+import sys
 
 class Index:
 
@@ -476,8 +477,9 @@ class Indexer:
             if  n_doc > 0 and n_doc % inter == 0:
                 end = time.time ()
                 d_tot += end - start
-                memo_d += self.__test_memo_doc () / 1024.0 / 1024.0
+                memo_d = self.__test_memo_doc () / 1024.0 / 1024.0
                 print '%d\t%f\t%f\tdoc_ind' % (n_doc, d_tot, memo_d)
+                sys.stderr.write (str (n_doc))
         for e,k in ents:
             n_ent += 1
             if n_ent % inter == 0:
@@ -486,8 +488,9 @@ class Indexer:
             if n_ent > 0 and n_ent % inter == 0:
                 end = time.time ()
                 e_tot += end - start
-                memo_e += self.__test_memo_ent () / 1024.0 / 1024.0
+                memo_e = self.__test_memo_ent () / 1024.0 / 1024.0
                 print '%d\t%f\t%f\tent_ind' % (n_ent, e_tot, memo_e)
+                sys.stderr.write (str (n_ent))
         return self.ind
 
     def __flip (self, tri):
