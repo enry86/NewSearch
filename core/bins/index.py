@@ -387,9 +387,18 @@ class IndexSimilarity:
             b = float (sum (b_lst)) / d_tot
             c = float (sum (c_lst)) / d_tot
             d = self.index.dsov [doc][0]
-            s1 = float (a) / float (d)
-            s2 = float (b) / float (d - a)
-            s3 = float (c) / float (d - a - b)
+            try:
+                s1 = float (a) / float (d)
+            except ZeroDivisionError:
+                s1 = 1
+            try:
+                s2 = float (b) / float (d - a)
+            except ZeroDivisionError:
+                s2 = 1
+            try:
+                s3 = float (c) / float (d - a - b)
+            except ZeroDivisionError:
+                s3 = 1
             score = s1 + (1 - s1) * (s2 + (1 - s2) * s3)
             res.append ((score, doc))
         return res
