@@ -58,6 +58,11 @@ class DataBaseMysql:
     __insert_cnt = """insert into word_count values (%s, %s)"""
     __update_cnt = """update word_count set count = count + %s where word = %s"""
 
+    #QUERY CONSTRUCTION
+    __get_rnd_doc = """select docid from docs order by rand() limit 1"""
+    __get_rnd_exp_ent = """select keyword from keywords where docid = %s order by rand() limit %s"""
+
+
 
     def __init__ (self):
         self.user = mysqlsettings.MYSQL_USER
@@ -319,6 +324,12 @@ class DataBaseMysql:
 
     def get_first_eid (self):
         return self.__get_one (self.__get_firsteid)
+
+    def get_rand_doc (self):
+        return self.__get_one (self.__get_rnd_doc)
+
+    def get_query_1 (self, vals):
+        return self.__get_all_query (self.__get_rnd_exp_ent, vals)
 
     def create_tmp_query (self):
         res = True

@@ -61,16 +61,20 @@ class QueryParser:
             self.curr_q.set_verb (v)
             self.state = 3
         elif self.state == 2:
-            self.query.append (self.curr_q)
+            self.query.append (self.curr_q.get_query ())
             self.state = 0
             self.found_verb (v)
         elif self.state == 3:
-            self.query.append (self.curr_q)
+            self.query.append (self.curr_q.get_query ())
             l = self.curr_q.get_right ()
-            self.curr_q = Query ()
-            self.curr_q.add_left (l)
-            self.curr_q.set_verb (v)
-            self.state = 2
+            if l:
+                self.curr_q = Query ()
+                self.curr_q.add_left (l)
+                self.curr_q.set_verb (v)
+                self.state = 2
+            else:
+                self.curr_q = Query ()
+                self.state = 1
 
     def end_query (self):
         self.query.append (self.curr_q.get_query ())
