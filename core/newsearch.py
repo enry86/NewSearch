@@ -86,12 +86,11 @@ def main_query ():
     while q != 'q':
         q = raw_input (">")
         if q != 'q':
-            res = qa.run_query (q)
+            res, t, l = qa.run_query (q)
             res.sort ()
             for r in res:
                 print r[0], r[1]
     db.close_con ()
-
 
 
 def main_index_test ():
@@ -106,6 +105,36 @@ def main_index_test ():
     print 'Index built: %f' % (stop - start)
     raw_input ('Press any key...')
 
+
+def main_query_test (file_in):
+    from bins import index
+    from bins import query
+    import time
+    db = utils.database.DataBaseMysql ()
+    ind = index.Indexer (newsearch_cnf['test'], db)
+    memo_ind = ind.build_index ()
+    qa = query.QueryManager (memo_ind, newsearch_cnf['test'], newsearch_cnf['hexa_memo'], db)
+    fin = open (file_in)
+    for l in fin:
+        str_res = 'OK'
+        qry, doc, trm = l.split (':')
+        start = time.time ()
+        res, b_tme, l_qry  = qa.run_query (qry)
+        end = time.time ()
+        if not contains (res, doc):
+            str_res = 'ERR'
+        print '%f:%f:%s:%d:%d:%s' % ((end - start), b_tme, str_res, int (trm), l_qry, doc)
+    fin.close ()
+
+
+def contains (results, doc):
+    found = False
+    for r,d in results:
+        if d == doc:
+            found = True
+    return found
+
+
 if __name__ == '__main__':
     if sys.argv [1] == '-q':
         main_query ()
@@ -117,6 +146,8 @@ if __name__ == '__main__':
         main_index (files)
     elif sys.argv [1] == '-i':
         main_index_test ()
+    elif sys.argv [1] == '-qt':
+        main_query_test (sys.argv [2])
     else:
         files = sys.argv[1:]
         main_index (files)

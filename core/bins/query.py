@@ -3,6 +3,7 @@
 import utils.database
 import sys
 import nltk
+import time
 from bins import relations
 from bins import index
 
@@ -55,7 +56,7 @@ class QueryParser:
     def found_verb (self, v):
         if self.state == 0:
             self.curr_q = Query ()
-            self.set_verb (v)
+            self.curr_q.set_verb (v)
             self.state = 2
         elif self.state == 1:
             self.curr_q.set_verb (v)
@@ -69,7 +70,8 @@ class QueryParser:
             l = self.curr_q.get_right ()
             if l:
                 self.curr_q = Query ()
-                self.curr_q.add_left (l)
+                for tok in l:
+                    self.curr_q.add_left (tok)
                 self.curr_q.set_verb (v)
                 self.state = 2
             else:
@@ -93,11 +95,11 @@ class QueryManager:
             self.sim = relations.CompSimilarity (test)
 
     def run_query (self, sq):
-        print '#Building query'
+        start = time.time ()
         query = self.__analyze (sq)
-        print '#Query built'
+        end = time.time ()
         res = self.sim.query_similarity (query)
-        return res
+        return res, (end - start), len (query)
 
     def __analyze (self, q):
         res = list ()
@@ -174,6 +176,10 @@ class QueryManager:
             verb = q[1]
             if not verb:
                 verb = '*'
+            if objs and not subs:
+                tmp = objs
+                objs = subs
+                subs = tmp
             if subs and objs:
                 for s in subs:
                     for o in objs:

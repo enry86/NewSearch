@@ -17,6 +17,7 @@ class QueryConstructor:
 
 if __name__ == '__main__':
     qc = QueryConstructor ()
-    doc, qry = qc.query_1 (3)
-    print ':%s' % doc
-    print qry
+    for t in range (5):
+        for i in range (50):
+            doc, qry = qc.query_1 (t + 1)
+            print '%s:%s:%d' % (qry, doc, t + 1)
