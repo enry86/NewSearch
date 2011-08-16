@@ -221,14 +221,18 @@ class Extractor:
         verbs = list ()
         graph_v = str ()
         graph_s = self.graph.add_sent (s_id)
+        prev_v = '__NONE'
         for v, np in s_gr:
-            if v and len (np):
+            if len (np):
+                if not v:
+                    v = prev_v
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
                     self.triples.append ((self.tid, b[0].strip(), v.strip(), b[1].strip()))
                     self.documents.append ((self.docid, self.tid))
                     self.tid += 1
                     #self.db.insert_tri ((b[0], v, b[1], self.docid))
+                prev_v = v
 
 
     def __store_graph (self):

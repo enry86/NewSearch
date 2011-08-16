@@ -417,7 +417,7 @@ class IndexSimilarity:
                     except KeyError:
                         res_tmp [e] = 1
                 for r in res_tmp:
-                    if res_tmp [r] == len (tok):
+                    if res_tmp [r] >= len (tok):
                         res.append (r)
             except KeyError:
                 pass
