@@ -93,7 +93,6 @@ class QueryManager:
         query = self.__analyze (sq)
         print '#Query built'
         res = self.sim.query_similarity (query)
-        print query
         return res
 
     def __analyze (self, q):
