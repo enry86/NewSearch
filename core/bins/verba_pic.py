@@ -61,8 +61,8 @@ class Verba_Pickle:
                 err = True
             if graph and not err:
                 graph.output_graph (self.conf['graph_dir'], i)
-            if not err:
-                os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
+            #if not err:
+            #    os.remove (self.conf['in_dir'] + '/' + i + '.pickle')
             if not self.test:
                 print "Processed document %d out of %d" % (cnt, tot)
             cnt += 1
