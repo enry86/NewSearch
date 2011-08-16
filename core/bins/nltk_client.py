@@ -43,7 +43,7 @@ class Extractor:
         self.documents = list ()
         self.entities = list ()
         self.keywords = list ()
-        self.lu_ent = dict ()
+        self.lu_ent = self.__get_lu_index ()
 
     '''
     It works, really...
@@ -53,7 +53,7 @@ class Extractor:
         self.documents = list ()
         self.entities = list ()
         self.keywords = list ()
-        self.lu_ent = dict ()
+        #self.lu_ent = dict ()
         proc = 0
         store = 0
         res = None
@@ -245,4 +245,11 @@ class Extractor:
                 res.append ((np[i], np[i + 1]))
             else:
                 res.append ((np[i], '__NONE'))
+        return res
+
+    def __get_lu_index (self):
+        res = dict ()
+        ents = self.db.get_ents ()
+        for nsi, oci  in ents:
+            res [oci] = nsi
         return res

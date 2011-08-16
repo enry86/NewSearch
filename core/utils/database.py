@@ -22,6 +22,7 @@ class DataBaseMysql:
     __insert_pin = """insert into pages_index values (%s, NOW())"""
     __retr_triples_doc = """select triple from docs where docid = %s"""
     __get_tri_doc = """select d.triple, t.subject, t.verb, t.object from docs d, triples t where t.id = d.triple and d.docid = %s"""
+    __get_all_ent_id = """select id, oc_id from entities"""
 
     #DOCS SIMILARITY
     __lookup_sim = """select count(*) from doc_sim where (doc1 = %s and doc2=%s) or (doc1=%s and doc2=%s)"""
@@ -303,6 +304,9 @@ class DataBaseMysql:
 
     def get_triples (self):
         return self.__get_all (self.__get_all_triples)
+
+    def get_ents_id (self):
+        return self.__get_all (self.__get_all_ent_id)
 
     def get_triples_doc (self, doc):
         return self.__get_all_query (self.__retr_triples_doc, doc)
