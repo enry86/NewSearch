@@ -31,6 +31,13 @@ class Index:
         self.__add_sovd (doc, sub, vrb, obj)
         self.__add_sod (doc, sub, obj)
         self.__add_sd (doc, sub)
+        s_sub = sub.split ()
+        if len (s_sub) > 1:
+            for t in s_sub:
+                self.__add_dsov (doc, t, vrb, obj)
+                self.__add_sovd (doc, t, vrb, obj)
+                self.__add_sod (doc, t, obj)
+                self.__add_sd (doc, t)
         if obj != '__NONE':
             self.__add_do (doc, obj)
             self.__add_od (doc, obj)

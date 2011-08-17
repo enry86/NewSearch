@@ -139,12 +139,21 @@ class QueryManager:
 
     def __pos_tag (self, tok):
         res = list ()
+        res_fin = list ()
+        pos = nltk.pos_tag (tok)
         for t in tok:
             if self.ind.v.has_key (t):
                 res.append ((t, 'VB'))
             else:
                 res.append ((t, 'NP'))
-        return res
+        for i, t in enumerate (res):
+            n_pt = pos [i][1]
+            m_pt = t[1]
+            if 'VB' in n_pt and 'VB' in m_pt:
+                res_fin.append ((t[0], 'VB'))
+            else:
+                res_fin.append ((t[0], 'N'))
+        return res_fin
 
 
     def __rem_stopw (self, tok):
