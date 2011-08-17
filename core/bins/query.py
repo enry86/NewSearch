@@ -142,7 +142,7 @@ class QueryManager:
         else:
             for t in tok:
                 if t not in self.stopw:
-                    res.append (tok)
+                    res.append (t)
         if len (res) == 0:
             return tok
         else:
