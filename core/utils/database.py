@@ -60,8 +60,9 @@ class DataBaseMysql:
 
     #QUERY CONSTRUCTION
     __get_rnd_doc = """select docid from docs order by rand() limit 1"""
+    __get_rnd_tri_doc = """select t.subject, t.verb, t.object from triples t, docs d where t.id = d.triple and d.docid = %s order by rand() limit %s"""
     __get_rnd_exp_ent = """select keyword from keywords where docid = %s order by rand() limit %s"""
-
+    __get_rnd_exp_q2 = """select keyword from keywords where id = %s order by rand() limit 1"""
 
 
     def __init__ (self):
@@ -330,6 +331,12 @@ class DataBaseMysql:
 
     def get_query_1 (self, vals):
         return self.__get_all_query (self.__get_rnd_exp_ent, vals)
+
+    def get_tri_q2 (self, vals):
+        return self.__get_all_query (self.__get_rnd_tri_doc, vals)
+
+    def get_kws_q2 (self, vals):
+        return self.__get_all_query (self.__get_rnd_exp_q2, vals)
 
     def create_tmp_query (self):
         res = True

@@ -120,7 +120,7 @@ class QueryManager:
     def __analyze (self, q):
         res = list ()
         tok = q.split ()
-        tok = self.__rem_stopw (tok)
+        #tok = self.__rem_stopw (tok)
         pos = self.__pos_tag (tok)
         qry = self.__build_query (pos)
         query_kw = self.__refine_qry (qry)
