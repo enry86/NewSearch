@@ -125,12 +125,13 @@ class QueryManager:
         query_kw = self.__refine_qry (qry)
         query_fin = list ()
         for tri in query_kw:
-            query_fin += self.__find_ent (tri)
+            #query_fin += self.__find_ent (tri)
             idt, s, v, o = tri
-            s = self.lem.lemmatize (s)
+            if not s.startswith ('_nsid'):
+                s = self.lem.lemmatize (s)
             if v != '*':
                 v = self.lem.lemmatize (v)
-            if o != '*':
+            if o != '*' and not o.startswith ('_nsid'):
                 o = self.lem.lemmatize (o)
             query_fin.append (('__query__', s, v, o))
         return query_fin
@@ -200,8 +201,8 @@ class QueryManager:
         id_t = '__query__'
         for q in qry:
             tmp_res = list ()
-            subs = self.__set_cmp (q[0])
-            objs = self.__set_cmp (q[2])
+            subs = self.__add_ents (q[0])
+            objs = self.__add_ents (q[2])
             verb = q[1]
             if not verb:
                 verb = '*'
@@ -223,8 +224,31 @@ class QueryManager:
         return res
 
 
-    def __set_cmp (self, lst):
+    def __add_ents (self, lst):
         res = list ()
+        ents = set ()
+        tmp_e = list ()
+        for w in lst:
+            tmp = list ()
+            tmp += self.sim.resolve_ent (w)
+            for t in tmp:
+                ents.add ('_nsid%d' % t)
+        if len (lst) > 1:
+            j = ' '.join (lst)
+            lst.append (j)
+            e_j = self.sim.resolve_ent (j)
+            if e_j:
+                ents = set ()
+                for e in e_j:
+                    ents.add ('_nsid%d' % e)
+        for en in ents:
+            tmp_e.append (en)
+        res = lst + tmp_e
+        return res
+
+
+
+
         l_e, l_n = self.__extr_ent (lst)
         res += l_e
         res += l_n
