@@ -44,6 +44,7 @@ class Extractor:
         self.entities = list ()
         self.keywords = list ()
         self.lu_ent = self.__get_lu_index ()
+        self.lu_tri = self.__get_lu_tri ()
 
     '''
     It works, really...
@@ -228,9 +229,15 @@ class Extractor:
                     v = prev_v
                 bigr = self.__get_bigrams (np)
                 for b in bigr:
-                    self.triples.append ((self.tid, b[0].strip(), v.strip(), b[1].strip()))
-                    self.documents.append ((self.docid, self.tid))
-                    self.tid += 1
+                    key = '%s#_EF_#%s#_EF_#%s' % (b[0].strip(), v.strip(), b[1].strip())
+                    try:
+                        tri_id = self.lu_tri [key]
+                    except KeyError:
+                        tri_id = self.tid
+                        self.triples.append ((self.tid, b[0].strip(), v.strip(), b[1].strip()))
+                        self.lu_tri [key] = tri_id
+                        self.tid += 1
+                    self.documents.append ((self.docid, tri_id))
                     #self.db.insert_tri ((b[0], v, b[1], self.docid))
                 prev_v = v
 
@@ -249,6 +256,14 @@ class Extractor:
                 res.append ((np[i], np[i + 1]))
             else:
                 res.append ((np[i], '__NONE'))
+        return res
+
+    def __get_lu_tri (self):
+        res = dict ()
+        tris = self.db.get_triples ()
+        for i, s, v, o in tris:
+            key = '%s#_EF_#%s#_EF_#%s' % (s, v, o)
+            res [key] = i
         return res
 
     def __get_lu_index (self):
