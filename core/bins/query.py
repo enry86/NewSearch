@@ -112,7 +112,6 @@ class QueryManager:
     def run_query (self, sq):
         start = time.time ()
         query = self.__analyze (sq)
-        print query
         end = time.time ()
         res = self.sim.query_similarity (query)
         return res, (end - start), len (query)
