@@ -101,6 +101,7 @@ class QueryManager:
 
     def __init__ (self, ind, test, hexa, db):
         #self.db = utils.database.DataBaseMysql ()
+        self.ind = ind
         self.db = db
         self.lem = nltk.stem.WordNetLemmatizer ()
         self.test = test
@@ -120,7 +121,7 @@ class QueryManager:
         res = list ()
         tok = q.split ()
         tok = self.__rem_stopw (tok)
-        pos = nltk.pos_tag (tok)
+        pos = self.__pos_tag (tok)
         qry = self.__build_query (pos)
         query_kw = self.__refine_qry (qry)
         query_fin = list ()
@@ -135,6 +136,16 @@ class QueryManager:
                 o = self.lem.lemmatize (o)
             query_fin.append (('__query__', s, v, o))
         return query_fin
+
+    def __pos_tag (self, tok):
+        res = list ()
+        for t in tok:
+            if self.ind.v.has_key (t):
+                res.append ((t, 'VB'))
+            else:
+                res.append ((t, 'NP'))
+        return res
+
 
     def __rem_stopw (self, tok):
         res = list ()
@@ -154,7 +165,10 @@ class QueryManager:
         prs = QueryParser ()
         for w, t in pos:
             if 'VB' in t:
-                prs.found_verb (w)
+                if len (pos) == 1:
+                    prs.found_noun (w)
+                else:
+                    prs.found_verb (w)
             else:
                 prs.found_noun (w)
         prs.end_query ()
@@ -201,8 +215,8 @@ class QueryManager:
         id_t = '__query__'
         for q in qry:
             tmp_res = list ()
-            subs = self.__add_ents (q[0])
-            objs = self.__add_ents (q[2])
+            subs, s_ent = self.__add_ents (q[0])
+            objs, o_ent = self.__add_ents (q[2])
             verb = q[1]
             if not verb:
                 verb = '*'
@@ -210,6 +224,10 @@ class QueryManager:
                 tmp = objs
                 objs = subs
                 subs = tmp
+            if o_ent and not s_ent:
+                tmp = o_ent
+                o_ent = s_ent
+                s_ent= tmp
             if subs and objs:
                 for s in subs:
                     for o in objs:
@@ -219,6 +237,17 @@ class QueryManager:
                     tmp_res.append ((id_t, s, verb, '*'))
                     for o in subs [k + 1:]:
                         tmp_res.append ((id_t, s, verb, o))
+            if s_ent and o_ent:
+                for se in s_ent:
+                    for oe in o_ent:
+                        tmp_res.append ((id_t, se, verb, oe))
+            elif s_ent and objs:
+                for se in s_ent:
+                    for o in objs:
+                        tmp_res.append ((id_t, se, verb, o))
+            elif s_ent:
+                for se in s_ent:
+                    tmp_res.append ((id_t, se, verb, '*'))
             if tmp_res:
                 res += tmp_res
         return res
@@ -243,8 +272,7 @@ class QueryManager:
                     ents.add ('_nsid%d' % e)
         for en in ents:
             tmp_e.append (en)
-        res = lst + tmp_e
-        return res
+        return lst, tmp_e
 
 
 

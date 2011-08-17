@@ -18,6 +18,7 @@ class Index:
         self.sod = dict ()
         self.sd = dict ()
         self.svd = dict ()
+        self.v = dict ()
         self.expr = dict ()
 
     def add_triple (self, tri):
@@ -25,6 +26,7 @@ class Index:
         sub = sub.strip ()
         vrb = vrb.strip ()
         obj = obj.strip ()
+        self.__add_v (vrb)
         self.__add_dsov (doc, sub, vrb, obj)
         self.__add_sovd (doc, sub, vrb, obj)
         self.__add_sod (doc, sub, obj)
@@ -41,6 +43,11 @@ class Index:
             except KeyError:
                 self.expr [t] = set ()
                 self.expr [t].add (ent)
+
+    def __add_v (self, vrb):
+        tok = vrb.split ()
+        for t in tok:
+            self.v [t] = True
 
 
     def __add_dsov (self, doc, sub, vrb, obj):
