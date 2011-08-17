@@ -119,6 +119,7 @@ class QueryManager:
     def __analyze (self, q):
         res = list ()
         tok = q.split ()
+        tok = self.__rem_stopw (tok)
         pos = nltk.pos_tag (tok)
         qry = self.__build_query (pos)
         query_kw = self.__refine_qry (qry)
@@ -134,15 +135,27 @@ class QueryManager:
             query_fin.append (('__query__', s, v, o))
         return query_fin
 
+    def __rem_stopw (self, tok):
+        res = list ()
+        if len (tok) == 1:
+            return tok
+        else:
+            for t in tok:
+                if t not in self.stopw:
+                    res.append (tok)
+        if len (res) == 0:
+            return tok
+        else:
+            return res
+
 
     def __build_query (self, pos):
         prs = QueryParser ()
         for w, t in pos:
-            if w not in self.stopw:
-                if 'VB' in t:
-                    prs.found_verb (w)
-                else:
-                    prs.found_noun (w)
+            if 'VB' in t:
+                prs.found_verb (w)
+            else:
+                prs.found_noun (w)
         prs.end_query ()
         query = prs.get_result ()
         return query
