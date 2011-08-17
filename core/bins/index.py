@@ -37,9 +37,10 @@ class Index:
         toks = exp.split ()
         for t in toks:
             try:
-                self.expr[t].append (ent)
+                self.expr [t].add (ent)
             except KeyError:
-                self.expr[t] = [ent]
+                self.expr [t] = set ()
+                self.expr [t].add (ent)
 
 
     def __add_dsov (self, doc, sub, vrb, obj):
