@@ -39,11 +39,36 @@ class QueryConstructor:
 
 
     def query_3 (self, terms):
-        pass
+        qry = str ();
+        doc = self.db.get_rand_doc () [0]
+        tri = self.db.get_tri_q2 ((doc, terms))
+        for s, v, o in tri:
+            if s.startswith ('_nsid'):
+                s = self.__resolve_kw (s, doc) [0]
+            if o.startswith ('_nsid'):
+                o = self.__resolve_kw (o, doc) [0]
+            vt = v.split ()
+            tmp_v = str ()
+            for t in vt:
+                if '_nsid' not in t:
+                    tmp_v += ' ' + t
 
-    def __resolve_kw (self, ent):
+            if tmp_v:
+                v = tmp_v.strip ()
+            elif '_nsid' in v:
+                v = str ()
+            qry += '%s %s %s ' % (s, v, o)
+        qry = qry.replace ('__NONE', '')
+        return doc, qry.strip ()
+
+
+
+    def __resolve_kw (self, ent, doc = None):
         i = int (ent.replace ('_nsid', ''))
-        kw = self.db.get_kws_q2 ((i)) [0]
+        if doc:
+            kw = self.db.get_kws_q3 ((i, doc)) [0]
+        else:
+            kw = self.db.get_kws_q2 ((i)) [0]
         return kw
 
 
@@ -59,4 +84,9 @@ if __name__ == '__main__':
         for t in range (3):
             for i in range (70):
                 doc, qry = qc.query_2 (t + 1)
+                print '%s:%s:%d' % (qry, doc, t + 1)
+    elif mode == '3':
+        for t in range (3):
+            for i in range (70):
+                doc, qry = qc.query_3 (t + 1)
                 print '%s:%s:%d' % (qry, doc, t + 1)
