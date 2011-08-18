@@ -110,6 +110,7 @@ def main_query_test (file_in):
     from bins import index
     from bins import query
     import time
+    import gc
     db = utils.database.DataBaseMysql ()
     ind = index.Indexer (newsearch_cnf['test'], db)
     memo_ind = ind.build_index ()
@@ -118,9 +119,11 @@ def main_query_test (file_in):
     for l in fin:
         str_res = 'OK'
         qry, doc, trm = l.split (':')
+        gc.disable ()
         start = time.time ()
         res, b_tme, l_qry  = qa.run_query (qry)
         end = time.time ()
+        gc.enable ()
         if not contains (res, doc):
             str_res = 'ERR'
         print '%f:%f:%s:%d:%d:%s' % ((end - start), b_tme, str_res, int (trm), l_qry, doc)
