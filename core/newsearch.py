@@ -116,7 +116,9 @@ def main_query_test (file_in):
     memo_ind = ind.build_index ()
     qa = query.QueryManager (memo_ind, newsearch_cnf['test'], newsearch_cnf['hexa_memo'], db)
     fin = open (file_in)
+    i = 0
     for l in fin:
+        i += 1
         str_res = 'OK'
         qry, doc, trm = l.split (':')
         gc.disable ()
@@ -124,6 +126,7 @@ def main_query_test (file_in):
         res, b_tme, l_qry  = qa.run_query (qry)
         end = time.time ()
         gc.enable ()
+        sys.stderr.write ('Query ' + str (i))
         if not contains (res, doc):
             str_res = 'ERR'
         print '%f:%f:%s:%d:%d:%s' % ((end - start), b_tme, str_res, int (trm), l_qry, doc)
