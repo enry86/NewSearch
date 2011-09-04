@@ -1,0 +1,239 @@
+\documentclass{beamer}
+\usepackage{graphicx}
+\usetheme{Frankfurt}
+\usecolortheme{beaver}
+
+\title{Entity-based keyword search for web documents}
+\author{Enrico Sartori}
+\date{Academic Year 2010 - 2011}
+\institute{University of Trento}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{Introduction}
+\subsection{intro}
+
+\begin{frame}
+\frametitle{Motivation}
+Most of current search engines follow a keyword-based approach to
+document representation\\
+{\color{red}\bfseries{Advantages:}}\\
+\begin{itemize}
+\item Well-known approach, provides good results for information
+  retrieval and document classification
+\item Easy computation of similarity measures between documents, via
+  transformation into vector-space objects
+\end{itemize}
+{\color{red}\bfseries{Drawbacks:}}\\
+\begin{itemize}
+\item{{\bfseries Ambiguity in natural language:}} References to the same real world
+  object are expressed using different keywords
+\item{{\bfseries Loss of information:}} A flat list of words can't provide
+  information about relationships existing among the objects appearing
+  in the document
+\end{itemize}
+\end{frame}
+
+\section{Problem}
+\subsection{problem}
+
+\begin{frame}
+\frametitle{Problem definition}
+Given a user query in the form of a flat list of keyword:
+$$
+q = \{kw_{1}, \dots, kw_{n}\}
+$$
+\begin{enumerate}
+\item A document is considered relevant if it contains references to the
+same \emph{entity} named in the query
+\item Ranking of documents in the results set computed considering
+  the relationships found in the documents matching the query
+\end{enumerate}
+\begin{exampleblock}{Entity}
+An \emph{entity} is every real world object which can be uniquely
+identified, like a city, an enterprise or a public person.
+\end{exampleblock}
+\end{frame}
+
+\section{Solution}
+\subsection{Document Representation}
+
+\begin{frame}
+\frametitle{Entities and relationships}
+Entity-aware document model:
+\begin{itemize}
+\item Resolution of groups of keyword into \emph{uniquely identified
+  entities} (Named Entity Recognition)
+\item Enriching original document text with the identifiers given to the entities
+\end{itemize}
+Relationships identification:
+\begin{itemize}
+\item Each sentence in the document is summarized into a set of
+  triples
+$$
+t = (subject, verb, object)
+$$
+\item The verbs in the sentence describe actions that the objects in
+  the document are concurring to perform.
+\item The \emph{subject} and \emph{object} fields in the query can
+  either be an entity Id or common keywords.
+\end{itemize}
+The document is represented as the set of triples produced by the
+analysis of all the sentences
+\end{frame}
+
+\subsection{Query Processing}
+
+\begin{frame}
+\frametitle{From a keyword query to a set of triples}
+The user query needs to be translated into a form comparable to the
+document representation
+\begin{itemize}
+\item Entity recognition
+\item Relationship identification
+\end{itemize}
+\vspace{5mm}
+{\color{red}\bfseries{Algorithm overview:}}\\
+\vspace{3mm}
+\begin{tabular}{lcc}
+User query as a set of keyword && $kw_{1}, kw_{2}, kw_{3}, kw_{4}$\\
+& $\Downarrow$ &\\
+Verbs and nouns recognition && $n_{1}, v_{1}, n_{2}, n_{3}$\\
+& $\Downarrow$ &\\
+Triples production && $(n_{1}, v_{1}, n_{2}), (n_{1}, v_{1}, n_{3})$\\
+& $\Downarrow$ &\\
+Entities recognition && $(e_{1}, v_{1}, n_{2}), (e_{1}, v_{1}, e_{2})$\\
+\end{tabular}
+\end{frame}
+
+\subsection{Query Answering}
+
+\begin{frame}
+\frametitle{Query Answering}
+Similarity is computed considering how deeply the triples of the
+document match the query
+\begin{columns}
+\column{.5\textwidth}
+lolol
+\column{.5\textwidth}
+\begin{itemize}
+\item Set A: totally matching triples
+\item Set B: triples matching with \emph{subject} and \emph{object}
+\item Set C: triples matching only with \emph{subject} or \emph{object}
+\end{itemize}
+\end{columns}
+{\color{red}\bfseries{Similarity measure:}}
+$$
+s_{1} = \frac{|\mathcal{A}|}{|\mathcal{D}|};\;
+s_{2} = \frac{|\mathcal{B}|}{|\mathcal{D}| - |\mathcal{A}|};\;
+s_{3} = \frac{|\mathcal{C}|}{|\mathcal{D}|-(|\mathcal{A}|+|\mathcal{B}|)}
+$$
+
+$$
+s (t, d) = s_{1} + (1 - s_{1}) \times
+[s_{2} + (1 - s_{2}) \times s_{3}]
+$$
+\end{frame}
+
+\subsection{Indexing}
+
+\begin{frame}
+\frametitle{Fast access to data}
+Compute the cardinality of the subset A, B and C can be a bottleneck
+in term of performance
+\begin{itemize}
+\item Indexing structure living in main memory
+\item Provides support for fast filtering of triples
+\end{itemize}
+\vspace{5mm}
+The index should implement the following functions:\\
+\vspace{2mm}
+\begin{center}
+\begin{tabular}{ll}
+Set A: & $i_{\mathcal{A}} (s,v,o,d) = cnt_{s,v,o,d}$\\
+Set B: & $i_{\mathcal{B}} (s,o,d) = cnt_{s,o,d}$\\
+Set C: & $i_{\mathcal{C}} (s,o,d) = cnt_{s,d} + cnt_{o,d}$\\
+\end{tabular}
+\end{center}
+\vspace{3mm}
+Where $s$ is value for \emph{subject}, $o$ for \emph{object}, $v$ is
+the \emph{verb} and $d$ is the Id of the current document
+\end{frame}
+
+\section{Implementation}
+\subsection{Entity recognition}
+
+\begin{frame}
+\frametitle{OpenCalais and Entity Recognition}
+{\color{red}\bfseries{Document Pre-processing}}\\
+Need for a service that can highlight \emph{entities} into a document
+and provide identifiers for them
+\begin{itemize}
+\item Many services available on the Internet performing this task
+\item Integration of the OpenCalais REST webservice
+\item Grants high quality results and constant updates to its data
+\item Calling an external service presents latency issues
+\end{itemize}
+\vspace{2mm}
+{\color{red}\bfseries{Query Answering}}\\
+When responding a query time is a precious resource, calling an
+external service introduces too much latency
+\begin{itemize}
+\item Entity resolution using a local cache of OpenCalais data
+\item Cache built at document pre-processing time, storing information
+  about the entities recognized by the external service
+\end{itemize}
+\end{frame}
+
+\subsection{Relationships Identification}
+
+\begin{frame}
+\frametitle{Query answering}
+\end{frame}
+
+\subsection{Indexing}
+
+\begin{frame}
+\frametitle{Hexastore adaptation}
+\end{frame}
+
+\section{Experiments}
+\subsection{Document preprocessing}
+
+\begin{frame}
+\frametitle{Document preprocessing time}
+\end{frame}
+
+\subsection{Query answering}
+
+\begin{frame}
+\frametitle{Query processing and answering}
+\end{frame}
+
+\subsection{Indexing}
+
+\begin{frame}
+\frametitle{Indexing time and memory}
+\end{frame}
+
+\section{Conclusions}
+\subsection{Conclusions}
+
+\begin{frame}
+\frametitle{Conclusions and future work}
+\end{frame}
+
+\section*{}
+\begin{frame}
+\begin{center}
+{\bfseries The End\\}
+Thank you for your attention!\\
+Questions?
+\end{center}
+\end{frame}
+
+\end{document}
