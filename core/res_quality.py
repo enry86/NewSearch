@@ -12,7 +12,7 @@ class Qual_meas:
         avg_l = list ()
         avg_c = list ()
         avg_n = list ()
-        print ',ONLY LUCENE,COMMON,ONLY NEWSEARCH'
+        print ',ONLY LUCENE,COMMON,ONLY NEWSEARCH,QUERY ID'
         for i in range (len (self.lcn_f)):
             nf_lu = self.lcn_f [i]
             nf_ns = self.nsc_f [i]
@@ -21,8 +21,8 @@ class Qual_meas:
             res = self.__get_qual (hs_lu, hs_ns)
             l, c, n = res
             tot = float (sum (res))
-            print '# Docs,%d,%d,%d' % res
-            print 'Perc.,%f,%f,%f\n' % (l / tot, c / tot, n / tot)
+            print '# Docs,%d,%d,%d,%s' % (l,c,n,nf_lu)
+            print 'Perc.,%f,%f,%f,%s\n' % (l / tot, c / tot, n / tot, nf_lu)
             avg_l.append (l/tot)
             avg_c.append (c/tot)
             avg_n.append (n/tot)
