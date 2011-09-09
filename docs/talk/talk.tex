@@ -3,7 +3,7 @@
 \usetheme{Frankfurt}
 \usecolortheme{beaver}
 
-\title{Entity-based keyword search for web documents}
+\title{Entity-based Keyword Search in Web Documents}
 \author{Enrico Sartori}
 \date{Academic Year 2010 - 2011}
 \institute{University of Trento}
@@ -19,21 +19,52 @@
 
 \begin{frame}
 \frametitle{Motivation}
-Current search engines: {\bfseries Keyword based}\\
+Current search engines: {\bfseries Keyword based}
+\smallskip
+\begin{itemize}
+\item Documents and queries as flat lists of words
+\item Metrics computation based on keywords matching
+\end{itemize}
 \bigskip
 {\color{red}\bfseries{Advantages:}}\\
-\bigskip
+\smallskip
 \begin{itemize}
-\item Very popular in IR
-\item Vector based similarity measures
+\item Easily employ different similarity measures
+\item Efficiency and simplicity
+\item Broadly adopted in IR
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Drawbacks}
+{\color{red}\bfseries{Ambiguity in natural language}}\\
+\smallskip
+\begin{itemize}
+\item Different keywords describe the same real world object
+\item Meaning of words depending on the context
 \end{itemize}
 \bigskip
-{\color{red}\bfseries{Drawbacks:}}\\
-\bigskip
+\begin{center}
+\begin{figure}
+\includegraphics[scale=0.4]{imgs/ambiguity}
+\end{figure}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Drawbacks}
+{\color{red}\bfseries{Loss on information}}\\
+\smallskip
 \begin{itemize}
-\item Ambiguity in natural language
-\item Loss of information
+\item Impossible to infer relationships among keywords
+\item Loss of sentences structure
 \end{itemize}
+\bigskip
+\begin{center}
+\begin{figure}
+\includegraphics[scale=0.45]{imgs/lossinfo}
+\end{figure}
+\end{center}
 \end{frame}
 
 \subsection{Overview}
