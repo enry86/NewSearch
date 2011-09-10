@@ -67,66 +67,86 @@ Current search engines: {\bfseries Keyword based}
 \end{center}
 \end{frame}
 
-\subsection{Overview}
+\subsection{Our Proposal}
 
 \begin{frame}
-\frametitle{Overview}
-Documents are {\bfseries complex objects:}
-\bigskip
+\frametitle{Our Proposal}
+Use of {\bfseries Entities} for document and query representation\\
+\smallskip
 \begin{itemize}
-\item Entities can be seen in the document
-\item Relationships among entities described in documents
-\item Documents are not just flat lists of words
+\item{\bfseries Entity:} Every real world object which can be uniquely
+  identified
 \end{itemize}
 \bigskip
-Keyword-based approaches cannot catch these features of a document
+Exploit {\bfseries relationships} between entities in documents\\
+\smallskip
+\begin{itemize}
+\item Documents are not flat lists of words
+\item Documents and queries as sets of relationships
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Documents and queries}
+Document representation:\\
+\begin{figure}
+\includegraphics[scale=0.37]{imgs/docsrep}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Documents and queries}
+Query representation:\\
+\begin{figure}
+\includegraphics[scale=0.37]{imgs/qryrep}
+\end{figure}
+\bigskip
 \end{frame}
 
 \subsection{Problem definition}
 
 \begin{frame}
 \frametitle{Problem definition}
-User query as a flat list of keyword:
-$$
-q = \{kw_{1}, \dots, kw_{n}\}
-$$
-\begin{enumerate}
-\item A document is relevant if it refers to the same \emph{entities}
-  named in the query
-\item Ranking of documents given by relationships matching
-\end{enumerate}
+Classical Query Answering in web documents\\
+\begin{itemize}
+\item User query as a set of keywords:
+\end{itemize}
 \bigskip
-\begin{exampleblock}{Entity}
-Every real world object which can be uniquely identified
-\end{exampleblock}
+\begin{equation*}
+q = \{kw_{1}, \dots, kw_{n}\}
+\end{equation*}
+\\
+\bigskip
+Find the most relevant document
 \end{frame}
 
 \section{Solution}
-\subsection{Document Representation}
+\subsection{Overview}
 
 \begin{frame}
-\frametitle{Entities and relationships}
-Entity-aware document model:
+\frametitle{Document and Query representation}
+Query as a set of keywords $\rightarrow$ Set of {\bfseries triples}\\
+\smallskip
+\begin{figure}
+\includegraphics[scale=0.4]{imgs/triple}
+\end{figure}
+\medskip
+Sentences in documents summarized as triples:
 \begin{itemize}
-\item Recognition of \emph{uniquely identified entities} inside the
-  document
-\item Document enriched with the entities identifiers
+\item Document represented as the set of all the triples produced
 \end{itemize}
-\bigskip
-Relationships identification:
-\begin{itemize}
-\item Sentences summarization into triples
-$$
-t = (subject, verb, object)
-$$
-\item Verbs as actions involving entities
-\item Each verb produces at least a triple
-\end{itemize}
-\bigskip
-Document represented as the set of all the triples produced
 \end{frame}
 
-\subsection{Query Processing}
+\begin{frame}
+\frametitle{Triple comparison}
+Computing comparisons between triples is more challenging:
+\begin{itemize}
+\item Different levels of matching
+\end{itemize}
+\begin{figure}
+\includegraphics[scale=0.3]{imgs/tricmp}
+\end{figure}
+\end{frame}
 
 \begin{frame}
 \frametitle{From a keyword query to a set of triples}
