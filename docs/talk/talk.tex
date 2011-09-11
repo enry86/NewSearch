@@ -103,6 +103,7 @@ Query representation:\\
 \bigskip
 \end{frame}
 
+\section{Solution and Implementation}
 \subsection{Problem definition}
 
 \begin{frame}
@@ -117,10 +118,9 @@ q = \{kw_{1}, \dots, kw_{n}\}
 \end{equation*}
 \\
 \bigskip
-Find the most relevant document
+Find the most relevant documents
 \end{frame}
 
-\section{Solution}
 \subsection{Overview}
 
 \begin{frame}
@@ -148,6 +148,74 @@ Computing comparisons between triples is more challenging:
 \end{figure}
 \end{frame}
 
+\subsection{Document Analysis}
+
+\begin{frame}
+\frametitle{Document Preprocessing}
+Entity-aware document model:\\
+\begin{itemize}
+\item Recognition of \emph{uniquely identified entities} inside the
+  document
+\item Document enriched with the entities identifiers
+\end{itemize}
+\medskip
+\begin{figure}
+\includegraphics[scale=0.43]{imgs/entrec}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Entities Recognition}
+Entities recognition system
+\begin{itemize}
+\item Integration of OpenCalais webservice
+\end{itemize}
+\bigskip
+{\color{red}\bfseries{Advantages:}}\\
+\begin{itemize}
+\item Reliable and updated results
+\item Full text analysis
+\end{itemize}
+\medskip
+{\color{red}\bfseries{Drawbacks:}}\\
+\begin{itemize}
+\item Calls to an external service generate latency
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Verbs as Actions}
+Relationships identification:\\
+\begin{itemize}
+\item Sentence summarization into triples
+\item Verbs as actions involving triples
+\item Each verb produces at least one triple
+\end{itemize}
+\medskip
+\begin{figure}
+\includegraphics[scale=0.43]{imgs/sentsum}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Relationships Identification}
+Identification of sentence grammatical structure\\
+\begin{itemize}
+\item Sentences and word tokenization
+\item Part Of Speech tagging
+\item Sentences grammar tree building
+\item Summarization of grammar trees into triples
+\end{itemize}
+\bigskip
+Support of NLTK\\
+\begin{itemize}
+\item Collection of algorithms for Natural Language Processing
+\end{itemize}
+\end{frame}
+
+\subsection{Query Preprocessing}
+
 \begin{frame}
 \frametitle{From a keyword query to a set of triples}
 Translation of keyword query to a set of triples
@@ -169,10 +237,38 @@ Entities recognition && $(e_{1}, v_{1}, n_{2}), (e_{1}, v_{1}, e_{2})$\\
 \end{tabular}
 \end{frame}
 
+\begin{frame}
+\frametitle{Entity and relationships recognition}
+{\color{red}\bfseries{Entities}}\\
+\smallskip
+External service call too slow for query answering
+\begin{itemize}
+\item Usage of local cache of OpenCalais data
+\item Cache built at document pre-processing time
+\end{itemize}
+\bigskip
+{\color{red}\bfseries{Relationships}}\\
+\smallskip
+Simpler and time-saving approach
+\begin{itemize}
+\item Queries don't follow natural language grammar rules
+\item Ordering of keywords important to recognize relationships
+\end{itemize}
+\end{frame}
+
 \subsection{Query Answering}
 
+\begin{frame}
+\frametitle{Similarity computation}
+How to compute similarity metrics between documents and queries?
+\begin{figure}
+\includegraphics[scale=0.35]{imgs/docsim}
+\end{figure}
+\end{frame}
+
+
 \begin{frame}{t}
-\frametitle{Query Answering}
+\frametitle{Similarity computation}
 Similarity measure depends on relationships matching
 \bigskip
 \begin{columns}[T]
@@ -207,15 +303,13 @@ $$
 \subsection{Indexing}
 
 \begin{frame}
-\frametitle{Fast access to data}
+\frametitle{Performance improvement}
 Cardinality computation for sets A, B and C can be slow
 \begin{itemize}
-\item Indexing structure living in main memory
-\item Index provides fast filtering of triples
+\item Index structure provides fast filtering of triples
 \end{itemize}
-\vspace{5mm}
-The index should implement the following functions:\\
-\vspace{2mm}
+\bigskip
+Cardinality functions:\\
 \begin{center}
 \begin{tabular}{ll}
 Set A: & $i_{\mathcal{A}} (s,v,o,d) = cnt_{s,v,o,d}$\\
@@ -223,55 +317,13 @@ Set B: & $i_{\mathcal{B}} (s,o,d) = cnt_{s,o,d}$\\
 Set C: & $i_{\mathcal{C}} (s,o,d) = cnt_{s,d} + cnt_{o,d}$\\
 \end{tabular}
 \end{center}
-\vspace{3mm}
+\bigskip
 Returns the number of triples satisfying the given parameters
 \end{frame}
 
-\section{Implementation}
-\subsection{Entity recognition}
 
 \begin{frame}
-\frametitle{OpenCalais and Entity Recognition}
-{\color{red}\bfseries{Document Pre-processing}}\\
-Entities recognition system
-\begin{itemize}
-\item Integration of the OpenCalais REST webservice
-\item High quality results and constant updates to data
-\item Calling an external service presents latency issues
-\end{itemize}
-\bigskip
-{\color{red}\bfseries{Query Answering}}\\
-At query answering time no latencies acceptable
-\begin{itemize}
-\item Usage of local cache of OpenCalais data
-\item Cache built at document pre-processing time
-\end{itemize}
-\end{frame}
-
-\subsection{Relationships Identification}
-
-\begin{frame}
-\frametitle{Relationships Identification}
-Identification of sentence grammatical structure
-\begin{itemize}
-\item Sentences and word tokenization
-\item Part Of Speech tagging
-\item Sentences grammar tree building
-\item Summarization of grammar trees into triples
-\end{itemize}
-\bigskip
-{\color{red}\bfseries{Query Answering}}\\
-Simpler and time-saving approach
-\begin{itemize}
-\item Queries don't follow natural language grammar rules
-\item Ordering of keywords important to recognize relationships
-\end{itemize}
-\end{frame}
-
-\subsection{Indexing}
-
-\begin{frame}
-\frametitle{Index implementation}
+\frametitle{Performance improvement}
 The index structure is an adaptation of the Hexastore approach
 \begin{columns}
 \column{.4\textwidth}
@@ -343,15 +395,40 @@ TASK & TIME \\
 \end{figure}
 \end{columns}
 \bigskip
-Most of the user queries produce less than 400 triples, and the system
-responds to them in less than 0.3 s\\
+\scriptsize
+Most queries \textless  \; 400 triples\\
+Respons time \textless  \; 0.3 s\\
 \bigskip
-Fluctuation in the plot are caused by different values present in the
-triples
+Fluctuation in the plot caused by different values in the triples
 \begin{itemize}
 \item Wildcard values reduce the number of lookups in the index
 \end{itemize}
 \bigskip
+\end{frame}
+
+\begin{frame}
+\frametitle{Results quality}
+Comparison with {\bfseries Lucene} search engine implementation\\
+\bigskip
+\scriptsize
+\begin{center}
+\begin{tabular}{c|c|c|c}
+\bfseries LUCENE & \bfseries BOTH & \bfseries ENTITY-BASED & \bfseries
+QUERY\\
+\hline
+5 (0.6 \%) & 675 (92 \%) & 47 (6 \%) & Saudi pressure Yemen\\
+8 (0.8 \%) & 926 (96 \%) & 30 (3 \%) & Sarkozy Gaddafi Libya\\
+9 (2 \%) & 312 (90 \%) & 29 (8 \%) & English Premier League\\
+4 (0.9 \%) & 396 (94 \%) & 20 (4 \%) & Fukushima reactor meltdown\\
+34 (10 \%) & 267 (79 \%) & 38 (11 \%) & Bhopal gas leak
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item Entity-based collects documents referring to entities using
+  different keywords
+\item Common keywords resolved into entities
+\item Lucene uses verbs to retrieve documents
+\end{itemize}
 \end{frame}
 
 \subsection{Indexing}
@@ -370,9 +447,9 @@ triples
 \includegraphics[scale=0.46]{imgs/index_memo_d}
 \end{figure}
 \end{columns}
+\scriptsize
 \bigskip
-Time needed to build the index and memory usage grow almost linearly
-with the number of documents.\\
+Time and memory usage grows linearly with the number of documents.\\
 \bigskip
 \begin{itemize}
 \item Index structure built at startup
@@ -380,7 +457,6 @@ with the number of documents.\\
 \end{itemize}
 \bigskip
 \end{frame}
-
 
 \section{Conclusions}
 \subsection{Conclusions}
